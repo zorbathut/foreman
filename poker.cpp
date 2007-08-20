@@ -31,6 +31,13 @@ void getMemory(HANDLE handle, DWORD address, void *target, int bytes) {
   CHECK(rv);
 }
 
+void setMemory(HANDLE handle, DWORD address, void *target, int bytes) {
+  DWORD obytes = -1;
+  int rv = WriteProcessMemory(handle, (void*)address, target, bytes, &obytes);
+  CHECK(obytes == bytes);
+  CHECK(rv);
+}
+
 DWORD getMemoryDW(HANDLE handle, DWORD address) {
   DWORD storage;
   getMemory(handle, address, &storage, 4);
@@ -43,12 +50,30 @@ char getMemoryChar(HANDLE handle, DWORD address) {
   return storage;
 }
 
+void setMemoryChar(HANDLE handle, DWORD address, char data) {
+  setMemory(handle, address, &data, 1);
+}
+
 string getMemoryLT(HANDLE handle, DWORD address) {
   DWORD sptr = getMemoryDW(handle, address + 4);
   DWORD len = getMemoryDW(handle, address + 8);
   vector<char> dat(len);
   getMemory(handle, sptr, &*dat.begin(), len);
   return string(dat.begin(), dat.end());
+}
+
+bool isLivingDwarf(HANDLE handle, DWORD address) {
+  if(getMemoryDW(handle, address + 0xDC) & (1 << 1))
+    return false;
+  
+  string prof = getMemoryLT(handle, address + 0x60);
+  
+  CHECK(!prof.size() || getMemoryDW(handle, address + 0x78) == 72); // if a creature has a profession, something weird has happened
+  
+  if(getMemoryDW(handle, address + 0x78) != 72)
+    return false;
+  
+  return true;
 }
 
 const DWORD critter_start = 0x00ACB3EC;
@@ -67,29 +92,62 @@ vector<pair<string, DwarfInfo> > GameLock::get() const {
     DWORD addr = getMemoryDW(handle, start);
     start += 4;
     
-    if(getMemoryDW(handle, addr + 0xDC) & (1 << 1))
+    if(!isLivingDwarf(handle, addr))
       continue;
     
     string prof = getMemoryLT(handle, addr + 0x60);
     
-    CHECK(!prof.size() || getMemoryDW(handle, addr + 0x78) == 72); // if a creature has a profession, something weird has happened
-    
-    if(getMemoryDW(handle, addr + 0x78) != 72)
-      continue;
-    
-    //string firstname = getMemoryLT(handle, addr);
-    //string lastname = getMemoryLT(handle, addr + 16);
-    
     dprintf("Dwarfish: %08x %s is %d\n", addr, prof.c_str(), getMemoryDW(handle, addr + 0x78));
     
     DwarfInfo info;
-    for(int i = 0; i < ARRAY_SIZE(info.jobs); i++)
-      info.jobs[i] = (Change)(getMemoryChar(handle, addr + 0x460 + i) != 0);
+    for(int i = 0; i < ARRAY_SIZE(info.jobs); i++) {
+      char kar = getMemoryChar(handle, addr + 0x460 + i);
+      CHECK(!!kar == kar);
+      info.jobs[i] = (Change)kar;
+    }
     
     rv.push_back(make_pair(prof, info));
   }
 
   return rv;
+};
+
+void GameLock::set(const vector<pair<string, DwarfInfo> > &sinf) {
+  DWORD start = getMemoryDW(handle, critter_start);
+  DWORD end = getMemoryDW(handle, critter_start + 4);
+  CHECK(start % 4 == 0);
+  CHECK(end % 4 == 0);
+  dprintf("SE is %08x %08x\n", start, end);
+  DWORD count = (end - start) / 4;
+  
+  vector<pair<string, DwarfInfo> > rv;
+  
+  int cn = 0;
+  for(int i = 0; i < count; i++) {
+    DWORD addr = getMemoryDW(handle, start);
+    start += 4;
+    
+    if(!isLivingDwarf(handle, addr))
+      continue;
+    
+    //string firstname = getMemoryLT(handle, addr);
+    //string lastname = getMemoryLT(handle, addr + 16);
+    
+    string prof = getMemoryLT(handle, addr + 0x60);
+    
+    CHECK(sinf[cn].first == prof);
+    
+    for(int i = 0; i < ARRAY_SIZE(sinf[cn].second.jobs); i++) {
+      if(sinf[cn].second.jobs[i] == C_MU)
+        continue;
+      setMemoryChar(handle, addr + 0x460 + i, sinf[cn].second.jobs[i]);
+      CHECK(getMemoryChar(handle, addr + 0x460 + i) == sinf[cn].second.jobs[i]);
+    }
+    
+    cn++;
+  }
+  
+  CHECK(cn == sinf.size());
 };
 
 void SuspendProcess(DWORD pid, bool suspend) { 

@@ -45,7 +45,7 @@ public:
   
   vector<pair<string, DwarfInfo> > get() const;
   
-  void set(const vector<DwarfInfo> &info);
+  void set(const vector<pair<string, DwarfInfo> > &info);
 
   GameLock(HANDLE handle, DWORD pid);
   ~GameLock();

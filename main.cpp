@@ -155,6 +155,24 @@ bool ForemanMain::OnInit() {
         foo += StringPrintf("%d", gt[i].second.jobs[j]);
       dprintf("%s\n", foo.c_str());
     }
+    
+    for(int i = 0; i < gt.size(); i++) {
+      for(int j = 0; j < ARRAY_SIZE(gt[i].second.jobs); j++)
+        gt[i].second.jobs[j] = C_MU;
+      gt[i].second.jobs[0xC] = C_YES;
+    }
+    
+    gl->set(gt);
+    
+    gt = gl->get();
+    for(int i = 0; i < gt.size(); i++) {
+      string foo = StringPrintf("name: \"%s\"  joblist: ", gt[i].first.c_str());
+      for(int j = 0; j < ARRAY_SIZE(gt[i].second.jobs); j++) {
+        foo += StringPrintf("%d", gt[i].second.jobs[j]);
+        CHECK(gt[i].second.jobs[0xC] == C_YES);
+      }
+      dprintf("%s\n", foo.c_str());
+    }
   }
   
   return true;
