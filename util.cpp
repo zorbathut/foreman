@@ -22,7 +22,6 @@ I can be contacted at zorba-foreman@pavlovian.net
 #include "util.h"
 
 #include "debug.h"
-#include "adler32.h"
 
 #include <vector>
 #include <cmath>

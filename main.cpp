@@ -52,35 +52,12 @@ enum {
       ID_Quit,
 
     // Edit menu
-      ID_Undo,
-      ID_Redo,
-      ID_Cut,
-      ID_Copy,
-      ID_Paste,
-      ID_Delete,
+      ID_Connect,
+      ID_Scan,
 
     // Help menu
       ID_About,
-  
-  // Toolbar items
-    ID_NewPath,
-    ID_NewPathMenu,
-    ID_NewNode,
-    ID_NewNodeMenu,
-    ID_NewTank,
-    ID_NewTankMenu,
-    
-    ID_GridToggle,
-    ID_GridSpinner,
-    
-    ID_RotGridToggle,
-    ID_RotGridSpinner,
-    
-    ID_ShowControlsToggle,
 
-  // Property pane items
-    ID_PathReflects,
-    ID_PathRotation
 };
 
 BEGIN_EVENT_TABLE(ForemanWindow, wxFrame)
@@ -107,21 +84,8 @@ ForemanWindow::ForemanWindow() : wxFrame((wxFrame *)NULL, -1, foremanname, wxDef
   {
     wxMenu *menuFile = new wxMenu;
     
-    menuFile->Append(ID_Undo, "&Undo\tCtrl+Z");
-    menuFile->Append(ID_Redo, "&Redo\tCtrl+Y");
-    
-    menuFile->AppendSeparator();
-    
-    menuFile->Append(ID_Cut, "Cu&t\tCtrl+X");
-    menuFile->Append(ID_Copy, "&Copy\tCtrl+C");
-    menuFile->Append(ID_Paste, "&Paste\tCtrl+V");
-    menuFile->Append(ID_Delete, "&Delete\tDel");
-    
-    menuFile->AppendSeparator();
-    
-    menuFile->Append(ID_NewPathMenu, "Add path\tP");
-    menuFile->Append(ID_NewNodeMenu, "Add node\tA");
-    menuFile->Append(ID_NewTankMenu, "Add tank\tT");
+    menuFile->Append(ID_Connect, "&Connect\tCtrl+K");
+    menuFile->Append(ID_Scan, "&Scan\tCtrl+C");
     
     menuBar->Append(menuFile, "&Edit");
   }
@@ -141,13 +105,13 @@ ForemanWindow::ForemanWindow() : wxFrame((wxFrame *)NULL, -1, foremanname, wxDef
   SetStatusText("");
   
   wxToolBar *toolbar = new wxToolBar(this, wxID_ANY);
-  toolbar->AddTool(ID_NewPath, "add path", wxBitmap("data/vecedit/addpath.png", wxBITMAP_TYPE_PNG), "Add a new path", wxITEM_CHECK);
-  toolbar->AddTool(ID_NewNode, "add node", wxBitmap("data/vecedit/addnode.png", wxBITMAP_TYPE_PNG), "Add a new node", wxITEM_CHECK);
-  toolbar->AddTool(ID_NewTank, "add tank", wxBitmap("data/vecedit/addtank.png", wxBITMAP_TYPE_PNG), "Add a new tank", wxITEM_CHECK);
+  
+  toolbar->AddControl(new wxButton(toolbar, ID_Connect, "Connect"));
   
   toolbar->AddSeparator();
-  toolbar->AddTool(ID_GridToggle, "toggle grid", wxBitmap("data/vecedit/grid.png", wxBITMAP_TYPE_PNG), "Activate grid lock", wxITEM_CHECK);
-  toolbar->AddControl(new wxSpinCtrl(toolbar, ID_GridSpinner, "16", wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 1, 16384));  
+  
+  toolbar->AddControl(new wxButton(toolbar, ID_Scan, "Scan"));
+  
   toolbar->Realize();
   toolbar->SetMinSize(wxSize(0, 25));  // this shouldn't be needed >:(
 }
