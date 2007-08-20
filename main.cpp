@@ -24,23 +24,97 @@ I can be contacted at zorba-foreman@pavlovian.net
 #include <wx/wx.h>
 #include <wx/toolbar.h>
 #include <wx/tbarbase.h>
-#include <wx/spinctrl.h>
 
 #include "poker.h"
 #include "os.h"
 #include "util.h"
 #include "db.h"
 
+#include <boost/noncopyable.hpp>
+
 using namespace std;
 
 const string foremanname =  "Dwarf Foreman";
 
 /*************
+ * ForemanGrid
+ */
+
+class ForemanGrid : public wxPanel, boost::noncopyable {
+  vector<pair<string, vector<Change> > > dat;
+  
+public:
+
+  void setGrid(const vector<pair<string, vector<Change> > > &foo);
+  
+  void OnPaint(wxPaintEvent& event);
+
+  ForemanGrid(wxWindow *parent);
+  DECLARE_EVENT_TABLE()
+};
+
+BEGIN_EVENT_TABLE(ForemanGrid, wxPanel)
+  EVT_PAINT(ForemanGrid::OnPaint)
+END_EVENT_TABLE()
+
+void ForemanGrid::setGrid(const vector<pair<string, vector<Change> > > &foo) {
+  dat = foo;
+  
+  Refresh();
+}
+
+const int xsz = 16;
+const int ysz = 16;
+
+const int xborder = 50;
+const int yborder = 50;
+
+void ForemanGrid::OnPaint(wxPaintEvent& event) {
+  wxPaintDC dc(this);
+  
+  dc.SetPen(*wxTRANSPARENT_PEN);
+  
+  for(int m = 0; m < 3; m++) {
+    if(m == C_NO)
+      dc.SetBrush(*wxTheBrushList->FindOrCreateBrush(wxColour(60, 60, 60)));
+    else if(m == C_YES)
+      dc.SetBrush(*wxGREEN_BRUSH);
+    else if(m == C_MU)
+      dc.SetBrush(*wxGREY_BRUSH);
+    else
+      CHECK(0);
+    
+    for(int i = 0; i < dat.size(); i++) {
+      for(int j = 0; j < dat[i].second.size(); j++) {
+        if(dat[i].second[j] == m) {
+          dc.DrawRectangle(xborder + xsz * j, yborder + ysz * i, xsz, ysz);
+        }
+      }
+    }
+  }
+  
+  dc.SetPen(*wxBLACK_PEN);
+  
+  if(dat.size()) {
+    for(int i = 0; i < dat[0].second.size() - 1; i++)
+      dc.DrawLine(xborder + xsz * (i + 1), 0, xborder + xsz * (i + 1), 10000);
+  }
+  
+  for(int i = 3; i < dat.size(); i += 3)
+    dc.DrawLine(0, yborder + ysz * i, 10000, yborder + ysz * i);
+}
+
+ForemanGrid::ForemanGrid(wxWindow *parent) : wxPanel(parent, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxVSCROLL | wxHSCROLL) {
+};
+
+/*************
  * ForemanWindow
  */
 
-class ForemanWindow : public wxFrame {
+class ForemanWindow : public wxFrame, boost::noncopyable {
   Db db;
+  
+  ForemanGrid *grid;
   
 public:
   
@@ -96,6 +170,7 @@ void ForemanWindow::scan() {
     return;
   
   vector<pair<string, vector<Change> > > matrix = db.scan(hnd.get());
+  grid->setGrid(matrix);
 }
 
 smart_ptr<GameHandle> ForemanWindow::stdConnect() {
@@ -161,13 +236,20 @@ ForemanWindow::ForemanWindow() : wxFrame((wxFrame *)NULL, -1, foremanname, wxDef
   
   toolbar->Realize();
   toolbar->SetMinSize(wxSize(0, 25));  // this shouldn't be needed >:(
+  
+  grid = new ForemanGrid(this);
+  
+  wxBoxSizer *sizer = new wxBoxSizer(wxVERTICAL);
+  sizer->Add(toolbar, 0, wxEXPAND);
+  sizer->Add(grid, 1, wxEXPAND);
+  SetSizer(sizer);
 }
 
 /*************
  * VeceditMain
  */
 
-class ForemanMain : public wxApp {
+class ForemanMain : public wxApp, boost::noncopyable {
   virtual bool OnInit();
 };
 

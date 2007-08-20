@@ -155,6 +155,12 @@ vector<pair<string, vector<Change> > > Db::scan(GameHandle *handle) {
       if(labor_text[j].descr == "(unknown)")
         itr->second.jobs[j] = C_MU; // don't take any chances
     }
+    
+    vector<Change> chang;
+    for(int i = 0; i < inmap.size(); i++)
+      chang.push_back(itr->second.jobs[inmap[i]]);
+    
+    rv.push_back(make_pair(itr->first, chang));
   }
   
   return rv;
@@ -170,7 +176,7 @@ Db::Db() {
   
   for(int i = 0; i < sorty.size(); i++) {
     outmap[sorty[i].second.second] = i;
-    inmap[i] = sorty[i].second.second;
+    inmap.push_back(sorty[i].second.second);
     names.push_back(labor_text[sorty[i].second.second].descr);
     types.push_back(color_text[sorty[i].first]);
     dprintf("%s: %s\n", color_text[sorty[i].first].c_str(), labor_text[sorty[i].second.second].descr.c_str());

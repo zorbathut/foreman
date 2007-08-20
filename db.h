@@ -30,7 +30,7 @@ using namespace std;
 
 class Db {
   map<int, int> outmap;
-  map<int, int> inmap;
+  vector<int> inmap;
   vector<string> names;
   vector<string> types;
   
