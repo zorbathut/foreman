@@ -27,6 +27,7 @@ I can be contacted at zorba-foreman@pavlovian.net
 #include <wx/spinctrl.h>
 
 #include "poker.h"
+#include "os.h"
 
 using namespace std;
 
@@ -133,6 +134,8 @@ class ForemanMain : public wxApp {
 IMPLEMENT_APP(ForemanMain)
 
 bool ForemanMain::OnInit() {
+  set_exename("foreman.exe");
+  
   wxFrame *frame = new ForemanWindow();
   frame->Show(true);
   SetTopWindow(frame);

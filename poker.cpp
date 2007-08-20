@@ -50,8 +50,23 @@ void SuspendProcess(DWORD pid, bool suspend) {
   CloseHandle(snapshot); 
 }
 
-GameLock::GameLock(HANDLE handle, DWORD pid) : handle(handle), pid(pid) { SuspendProcess(pid, true); };
-GameLock::~GameLock() { SuspendProcess(pid, false); };
+DWORD crash_pid = 0;
+void emergency_unsuspend() {
+  SuspendProcess(crash_pid, false);
+}
+
+GameLock::GameLock(HANDLE handle, DWORD pid) : handle(handle), pid(pid) {
+  CHECK(crash_pid == 0);
+  SuspendProcess(pid, true);
+  crash_pid = pid;
+  registerCrashFunction(emergency_unsuspend);
+};
+GameLock::~GameLock() {
+  CHECK(crash_pid == pid);
+  unregisterCrashFunction(emergency_unsuspend);
+  crash_pid = 0;
+  SuspendProcess(pid, false);
+};
 
 smart_ptr<GameLock> GameHandle::lockGame() {
   return smart_ptr<GameLock>(new GameLock(handle, pid));
