@@ -23,18 +23,22 @@ I can be contacted at zorba-foreman@pavlovian.net
 #define FOREMAN_POKER
 
 #include "smartptr.h"
+#include "util.h"
 
 #include <vector>
 #include <utility>
 
 #include <windows.h>
 
-const int jobcount = 62;
-
 enum Change { C_NO, C_YES, C_MU };
 
 struct DwarfInfo {
   Change jobs[64];
+  
+  DwarfInfo() {
+    for(int i = 0; i < ARRAY_SIZE(jobs); i++)
+      jobs[i] = C_MU;
+  }
 };
 
 class GameLock {

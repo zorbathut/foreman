@@ -29,6 +29,7 @@ I can be contacted at zorba-foreman@pavlovian.net
 #include "poker.h"
 #include "os.h"
 #include "util.h"
+#include "db.h"
 
 using namespace std;
 
@@ -39,7 +40,16 @@ const string foremanname =  "Dwarf Foreman";
  */
 
 class ForemanWindow : public wxFrame {
+  Db db;
+  
 public:
+  
+  void OnScan(wxCommandEvent &event);
+  void OnFullWrite(wxCommandEvent &event);
+
+  void scan();
+
+  smart_ptr<GameHandle> stdConnect();
   
   ForemanWindow();
   
@@ -56,16 +66,48 @@ enum {
       ID_Quit,
 
     // Edit menu
-      ID_Connect,
       ID_Scan,
+      ID_FullWrite,
 
     // Help menu
       ID_About,
-
 };
 
 BEGIN_EVENT_TABLE(ForemanWindow, wxFrame)
+  EVT_TOOL(ID_Scan, ForemanWindow::OnScan)
+  EVT_TOOL(ID_FullWrite, ForemanWindow::OnFullWrite)
+
+  EVT_BUTTON(ID_Scan, ForemanWindow::OnScan)
+  EVT_BUTTON(ID_FullWrite, ForemanWindow::OnFullWrite)
 END_EVENT_TABLE()
+
+void ForemanWindow::OnScan(wxCommandEvent &event) {
+  scan();
+}
+void ForemanWindow::OnFullWrite(wxCommandEvent &event) {
+  smart_ptr<GameHandle> hnd = stdConnect();
+  if(!hnd.get())
+    return;
+}
+
+void ForemanWindow::scan() {
+  smart_ptr<GameHandle> hnd = stdConnect();
+  if(!hnd.get())
+    return;
+  
+  vector<pair<string, vector<Change> > > matrix = db.scan(hnd.get());
+}
+
+smart_ptr<GameHandle> ForemanWindow::stdConnect() {
+  smart_ptr<GameHandle> hand = getGameHandle();
+  if(hand.get()) {
+    SetStatusText("");
+  } else {
+    SetStatusText("Couldn't connect to Dwarf Fortress, is it running?");
+  }
+  
+  return hand;
+}
 
 ForemanWindow::ForemanWindow() : wxFrame((wxFrame *)NULL, -1, foremanname, wxDefaultPosition, wxSize(800, 600)) {
   wxMenuBar *menuBar = new wxMenuBar;
@@ -73,12 +115,13 @@ ForemanWindow::ForemanWindow() : wxFrame((wxFrame *)NULL, -1, foremanname, wxDef
   {
     wxMenu *menuFile = new wxMenu;
     
+    /*
     menuFile->Append(ID_New, "&New\tCtrl-N");
     menuFile->Append(ID_Open, "&Open...\tCtrl-O");
     menuFile->Append(ID_Save, "&Save\tCtrl+S");
     menuFile->Append(ID_Saveas, "Save &as...\tCtrl+Shift+S");
     
-    menuFile->AppendSeparator();
+    menuFile->AppendSeparator();*/
     
     menuFile->Append(ID_Quit, "E&xit");
     
@@ -88,8 +131,8 @@ ForemanWindow::ForemanWindow() : wxFrame((wxFrame *)NULL, -1, foremanname, wxDef
   {
     wxMenu *menuFile = new wxMenu;
     
-    menuFile->Append(ID_Connect, "&Connect\tCtrl+K");
     menuFile->Append(ID_Scan, "&Scan\tCtrl+C");
+    menuFile->Append(ID_FullWrite, "&Full write\tCtrl+F");
     
     menuBar->Append(menuFile, "&Edit");
   }
@@ -110,15 +153,11 @@ ForemanWindow::ForemanWindow() : wxFrame((wxFrame *)NULL, -1, foremanname, wxDef
   
   wxToolBar *toolbar = new wxToolBar(this, wxID_ANY);
   
-  toolbar->AddControl(new wxButton(toolbar, ID_Connect, "Connect"));
-  
-  toolbar->AddSeparator();
-  
   toolbar->AddControl(new wxButton(toolbar, ID_Scan, "Scan"));
   
   toolbar->AddSeparator();
   
-  toolbar->AddControl(new wxButton(toolbar, ID_Scan, "Full write"));
+  toolbar->AddControl(new wxButton(toolbar, ID_FullWrite, "Full write"));
   
   toolbar->Realize();
   toolbar->SetMinSize(wxSize(0, 25));  // this shouldn't be needed >:(
@@ -141,6 +180,7 @@ bool ForemanMain::OnInit() {
   frame->Show(true);
   SetTopWindow(frame);
   
+  /*
   smart_ptr<GameHandle> gh = getGameHandle();
   CHECK(gh.get());
   dprintf("Got game handle\n");
@@ -173,7 +213,7 @@ bool ForemanMain::OnInit() {
       }
       dprintf("%s\n", foo.c_str());
     }
-  }
+  }*/
   
   return true;
 }
