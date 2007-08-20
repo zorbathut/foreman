@@ -27,15 +27,14 @@ I can be contacted at zorba-foreman@pavlovian.net
 #include <vector>
 #include <utility>
 
-#include <boost/optional.hpp>
 #include <windows.h>
 
 const int jobcount = 62;
 
 enum Change { C_NO, C_YES, C_MU };
 
-class DwarfInfo {
-  Change flag[62];
+struct DwarfInfo {
+  Change jobs[64];
 };
 
 class GameLock {
@@ -67,6 +66,6 @@ public:
 
 };
 
-boost::optional<GameHandle> getGameHandle();
+smart_ptr<GameHandle> getGameHandle();
 
 #endif

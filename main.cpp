@@ -28,6 +28,7 @@ I can be contacted at zorba-foreman@pavlovian.net
 
 #include "poker.h"
 #include "os.h"
+#include "util.h"
 
 using namespace std;
 
@@ -140,12 +141,20 @@ bool ForemanMain::OnInit() {
   frame->Show(true);
   SetTopWindow(frame);
   
-  boost::optional<GameHandle> gh = getGameHandle();
-  CHECK(gh);
+  smart_ptr<GameHandle> gh = getGameHandle();
+  CHECK(gh.get());
   dprintf("Got game handle\n");
   
   {
     smart_ptr<GameLock> gl = gh->lockGame();
+    
+    vector<pair<string, DwarfInfo> > gt = gl->get();
+    for(int i = 0; i < gt.size(); i++) {
+      string foo = StringPrintf("name: \"%s\"  joblist: ", gt[i].first.c_str());
+      for(int j = 0; j < ARRAY_SIZE(gt[i].second.jobs); j++)
+        foo += StringPrintf("%d", gt[i].second.jobs[j]);
+      dprintf("%s\n", foo.c_str());
+    }
   }
   
   return true;

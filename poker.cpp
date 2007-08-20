@@ -20,8 +20,77 @@ I can be contacted at zorba-foreman@pavlovian.net
 */
 
 #include "poker.h"
+#include "util.h"
 
 #include <tlhelp32.h>
+
+void getMemory(HANDLE handle, DWORD address, void *target, int bytes) {
+  DWORD obytes = -1;
+  int rv = ReadProcessMemory(handle, (void*)address, target, bytes, &obytes);
+  CHECK(obytes == bytes);
+  CHECK(rv);
+}
+
+DWORD getMemoryDW(HANDLE handle, DWORD address) {
+  DWORD storage;
+  getMemory(handle, address, &storage, 4);
+  return storage;
+}
+
+char getMemoryChar(HANDLE handle, DWORD address) {
+  char storage;
+  getMemory(handle, address, &storage, 1);
+  return storage;
+}
+
+string getMemoryLT(HANDLE handle, DWORD address) {
+  DWORD sptr = getMemoryDW(handle, address + 4);
+  DWORD len = getMemoryDW(handle, address + 8);
+  vector<char> dat(len);
+  getMemory(handle, sptr, &*dat.begin(), len);
+  return string(dat.begin(), dat.end());
+}
+
+const DWORD critter_start = 0x00ACB3EC;
+
+vector<pair<string, DwarfInfo> > GameLock::get() const {
+  DWORD start = getMemoryDW(handle, critter_start);
+  DWORD end = getMemoryDW(handle, critter_start + 4);
+  CHECK(start % 4 == 0);
+  CHECK(end % 4 == 0);
+  dprintf("SE is %08x %08x\n", start, end);
+  DWORD count = (end - start) / 4;
+  
+  vector<pair<string, DwarfInfo> > rv;
+  
+  for(int i = 0; i < count; i++) {
+    DWORD addr = getMemoryDW(handle, start);
+    start += 4;
+    
+    if(getMemoryDW(handle, addr + 0xDC) & (1 << 1))
+      continue;
+    
+    string prof = getMemoryLT(handle, addr + 0x60);
+    
+    CHECK(!prof.size() || getMemoryDW(handle, addr + 0x78) == 72); // if a creature has a profession, something weird has happened
+    
+    if(getMemoryDW(handle, addr + 0x78) != 72)
+      continue;
+    
+    //string firstname = getMemoryLT(handle, addr);
+    //string lastname = getMemoryLT(handle, addr + 16);
+    
+    dprintf("Dwarfish: %08x %s is %d\n", addr, prof.c_str(), getMemoryDW(handle, addr + 0x78));
+    
+    DwarfInfo info;
+    for(int i = 0; i < ARRAY_SIZE(info.jobs); i++)
+      info.jobs[i] = (Change)(getMemoryChar(handle, addr + 0x460 + i) != 0);
+    
+    rv.push_back(make_pair(prof, info));
+  }
+
+  return rv;
+};
 
 void SuspendProcess(DWORD pid, bool suspend) { 
   HANDLE snapshot;
@@ -72,7 +141,7 @@ smart_ptr<GameLock> GameHandle::lockGame() {
   return smart_ptr<GameLock>(new GameLock(handle, pid));
 }
 
-boost::optional<GameHandle> getGameHandle() {
+smart_ptr<GameHandle> getGameHandle() {
   HANDLE rv;
   
   HWND wnd;
@@ -86,7 +155,7 @@ boost::optional<GameHandle> getGameHandle() {
   dprintf("%p\n", rv);
   
   if(rv == NULL)
-    return boost::optional<GameHandle>();
+    return smart_ptr<GameHandle>();
   
-  return GameHandle(rv, pid);
+  return smart_ptr<GameHandle>(new GameHandle(rv, pid));
 }
