@@ -116,7 +116,9 @@ public:
 
   const vector<string> &getNames() const { return names; }
 
-  Change click(int x, int y, GameHandle *handle); // returns the new value of that spot
+  vector<pair<string, vector<Change> > > click(int x, int y, GameHandle *handle); // returns the new value of everything
+  
+  vector<pair<string, vector<Change> > > dump() const;
 
   Db();
 };

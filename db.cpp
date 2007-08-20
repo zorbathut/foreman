@@ -76,21 +76,14 @@ vector<pair<string, vector<Change> > > Db::scan(GameHandle *handle) {
     }
   }
   
-  vector<pair<string, vector<Change> > > rv;
   for(map<string, DwarfInfo>::iterator itr = dinf.begin(); itr != dinf.end(); itr++) {
     for(int j = 0; j < ARRAY_SIZE(itr->second.jobs); j++) {
       if(labor_text[j].descr == "(unknown)")
         itr->second.jobs[j] = C_MU; // don't take any chances
     }
-    
-    vector<Change> chang;
-    for(int i = 0; i < inmap.size(); i++)
-      chang.push_back(itr->second.jobs[inmap[i]]);
-    
-    rv.push_back(make_pair(itr->first, chang));
   }
   
-  return rv;
+  return dump();
 }
 
 void Db::full_write(GameHandle *handle) {
@@ -103,13 +96,33 @@ void Db::full_write(GameHandle *handle) {
       for(int j = 0; j < ARRAY_SIZE(dat[i].second.jobs); j++) {
         dat[i].second.jobs[j] = dinf[dat[i].first].jobs[j];
       }
+      
+      if(dinf[dat[i].first].jobs[inmap[distance(names.begin(), find(names.begin(), names.end(), "Wood Cutting"))]] == C_YES) {
+        // disable all weapons, enable axe
+        dat[i].second.jobs[0x29] = C_YES;
+        dat[i].second.jobs[0x2a] = C_NO;
+        dat[i].second.jobs[0x2b] = C_NO;
+        dat[i].second.jobs[0x2c] = C_NO;
+        dat[i].second.jobs[0x2d] = C_NO;
+        dat[i].second.jobs[0x2e] = C_NO;
+        dat[i].second.jobs[0x2f] = C_NO;
+      } else if(dinf[dat[i].first].jobs[inmap[distance(names.begin(), find(names.begin(), names.end(), "Mining"))]] == C_YES) {
+        // disable all weapons
+        dat[i].second.jobs[0x29] = C_NO;
+        dat[i].second.jobs[0x2a] = C_NO;
+        dat[i].second.jobs[0x2b] = C_NO;
+        dat[i].second.jobs[0x2c] = C_NO;
+        dat[i].second.jobs[0x2d] = C_NO;
+        dat[i].second.jobs[0x2e] = C_NO;
+        dat[i].second.jobs[0x2f] = C_NO;
+      }
     }
   }
   
   lock->set(dat);
 }
 
-Change Db::click(int x, int y, GameHandle *handle) {
+vector<pair<string, vector<Change> > > Db::click(int x, int y, GameHandle *handle) {
   dprintf("click at %d, %d\n", x, y);
   
   CHECK(y >= 0 && y < dinf.size());
@@ -117,7 +130,14 @@ Change Db::click(int x, int y, GameHandle *handle) {
   map<string, DwarfInfo>::iterator it = dinf.begin();
   advance(it, y);
   
-  it->second.jobs[inmap[x]] = (Change)!it->second.jobs[inmap[x]];
+  
+  while(names[x] == "Wood Cutting" && !it->second.jobs[inmap[x]] && it->second.jobs[inmap[distance(names.begin(), find(names.begin(), names.end(), "Mining"))]] != C_NO)
+    click(distance(names.begin(), find(names.begin(), names.end(), "Mining")), y, handle);  // turn mining off if we're turning woodcutting on
+  
+  while(names[x] == "Mining" && !it->second.jobs[inmap[x]] && it->second.jobs[inmap[distance(names.begin(), find(names.begin(), names.end(), "Wood Cutting"))]] != C_NO)
+    click(distance(names.begin(), find(names.begin(), names.end(), "Wood Cutting")), y, handle);  // turn woodcutting off if we're turning mining on
+  
+  it->second.jobs[inmap[x]] = (Change)!it->second.jobs[inmap[x]]; // we do this *afterwards* so we can't end up in a cycle of infinite toggling
   
   {
     smart_ptr<GameLock> lock = handle->lockGame();
@@ -127,15 +147,48 @@ Change Db::click(int x, int y, GameHandle *handle) {
     for(int i = 0; i < dat.size(); i++) {
       for(int j = 0; j < ARRAY_SIZE(dat[i].second.jobs); j++)
         dat[i].second.jobs[j] = C_MU;
+      
       if(dat[i].first == it->first) {
         dat[i].second.jobs[inmap[x]] = it->second.jobs[inmap[x]];
+        
+        if(names[x] == "Wood Cutting" && it->second.jobs[inmap[x]] == C_YES) {
+          // disable all weapons, enable axe
+          dat[i].second.jobs[0x29] = C_YES;
+          dat[i].second.jobs[0x2a] = C_NO;
+          dat[i].second.jobs[0x2b] = C_NO;
+          dat[i].second.jobs[0x2c] = C_NO;
+          dat[i].second.jobs[0x2d] = C_NO;
+          dat[i].second.jobs[0x2e] = C_NO;
+          dat[i].second.jobs[0x2f] = C_NO;
+        } else if(names[x] == "Mining" && it->second.jobs[inmap[x]] == C_YES) {
+          // disable all weapons
+          dat[i].second.jobs[0x29] = C_NO;
+          dat[i].second.jobs[0x2a] = C_NO;
+          dat[i].second.jobs[0x2b] = C_NO;
+          dat[i].second.jobs[0x2c] = C_NO;
+          dat[i].second.jobs[0x2d] = C_NO;
+          dat[i].second.jobs[0x2e] = C_NO;
+          dat[i].second.jobs[0x2f] = C_NO;
+        }
       }
     }
     
     lock->set(dat);
   }
   
-  return it->second.jobs[inmap[x]];
+  return dump();
+}
+
+vector<pair<string, vector<Change> > > Db::dump() const {
+  vector<pair<string, vector<Change> > > rv;
+  for(map<string, DwarfInfo>::const_iterator itr = dinf.begin(); itr != dinf.end(); itr++) {
+    vector<Change> chang;
+    for(int i = 0; i < inmap.size(); i++)
+      chang.push_back(itr->second.jobs[inmap[i]]);
+    
+    rv.push_back(make_pair(itr->first, chang));
+  }
+  return rv;
 }
 
 Db::Db() {

@@ -45,7 +45,7 @@ class ForemanGrid : public wxPanel, boost::noncopyable {
   vector<pair<string, vector<Change> > > dat;
   vector<string> names;
   
-  smart_ptr<Callback<Change, pair<int, int> > > clicky;
+  smart_ptr<Callback<vector<pair<string, vector<Change> > >, pair<int, int> > > clicky;
   
 public:
 
@@ -55,7 +55,7 @@ public:
   void OnPaint(wxPaintEvent& event);
   void OnMouse(wxMouseEvent &event);
 
-  ForemanGrid(wxWindow *parent, smart_ptr<Callback<Change, pair<int, int> > > clicky);
+  ForemanGrid(wxWindow *parent, smart_ptr<Callback<vector<pair<string, vector<Change> > >, pair<int, int> > > clicky);
   DECLARE_EVENT_TABLE()
 };
 
@@ -150,14 +150,23 @@ void ForemanGrid::OnMouse(wxMouseEvent &event) {
   y /= ysz;
   
   if(y >= 0 && y < dat.size() && x >= 0 && x < dat[0].second.size()) {
-    Change rv = clicky->Run(make_pair(x, y));
-    if(rv != -1)
-      dat[y].second[x] = rv;
-    RefreshRect(wxRect(xborder + xsz * x, yborder + ysz * y, xsz, ysz));
+    vector<pair<string, vector<Change> > > dt = clicky->Run(make_pair(x, y));
+    if(dt.size())
+      dat = dt;
+    if(names[x] == "Wood Cutting" || names[x] == "Mining") {
+      int a = distance(names.begin(), find(names.begin(), names.end(), "Wood Cutting"));
+      int b = distance(names.begin(), find(names.begin(), names.end(), "Mining"));
+      if(a > b)
+        swap(a, b);
+      RefreshRect(wxRect(xborder + xsz * a, yborder + ysz * y, (b - a + 1) * xsz, ysz));
+      // whee hack
+    } else {
+      RefreshRect(wxRect(xborder + xsz * x, yborder + ysz * y, xsz, ysz));
+    }
   }
 }
 
-ForemanGrid::ForemanGrid(wxWindow *parent, smart_ptr<Callback<Change, pair<int, int> > > clicky) : wxPanel(parent, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxVSCROLL | wxHSCROLL), clicky(clicky) {
+ForemanGrid::ForemanGrid(wxWindow *parent, smart_ptr<Callback<vector<pair<string, vector<Change> > >, pair<int, int> > > clicky) : wxPanel(parent, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxVSCROLL | wxHSCROLL), clicky(clicky) {
 };
 
 /*************
@@ -175,7 +184,7 @@ public:
   void OnFullWrite(wxCommandEvent &event);
 
   void scan();
-  Change gridclicky(pair<int, int> val);
+  vector<pair<string, vector<Change> > > gridclicky(pair<int, int> val);
 
   smart_ptr<GameHandle> stdConnect();
   
@@ -229,10 +238,10 @@ void ForemanWindow::scan() {
   grid->setGrid(matrix);
 }
 
-Change ForemanWindow::gridclicky(pair<int, int> val) {
+vector<pair<string, vector<Change> > > ForemanWindow::gridclicky(pair<int, int> val) {
   smart_ptr<GameHandle> hnd = stdConnect();
   if(!hnd.get())
-    return (Change)-1;
+    return vector<pair<string, vector<Change> > >();
   
   return db.click(val.first, val.second, hnd.get());
 }
