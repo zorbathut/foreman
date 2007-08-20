@@ -29,6 +29,7 @@ I can be contacted at zorba-foreman@pavlovian.net
 #include "os.h"
 #include "util.h"
 #include "db.h"
+#include "functor.h"
 
 #include <boost/noncopyable.hpp>
 
@@ -44,19 +45,23 @@ class ForemanGrid : public wxPanel, boost::noncopyable {
   vector<pair<string, vector<Change> > > dat;
   vector<string> names;
   
+  smart_ptr<Callback<Change, pair<int, int> > > clicky;
+  
 public:
 
   void setGrid(const vector<pair<string, vector<Change> > > &foo);
   void setNames(const vector<string> &in_names) { names = in_names; };
   
   void OnPaint(wxPaintEvent& event);
+  void OnMouse(wxMouseEvent &event);
 
-  ForemanGrid(wxWindow *parent);
+  ForemanGrid(wxWindow *parent, smart_ptr<Callback<Change, pair<int, int> > > clicky);
   DECLARE_EVENT_TABLE()
 };
 
 BEGIN_EVENT_TABLE(ForemanGrid, wxPanel)
   EVT_PAINT(ForemanGrid::OnPaint)
+  EVT_LEFT_DOWN(ForemanGrid::OnMouse)
 END_EVENT_TABLE()
 
 void ForemanGrid::setGrid(const vector<pair<string, vector<Change> > > &foo) {
@@ -105,6 +110,14 @@ void ForemanGrid::OnPaint(wxPaintEvent& event) {
     }
   }
   
+  /*dc.SetPen(*wxThePenList->FindOrCreatePen(wxColour(60, 60, 60), 1, wxDOT));
+  
+  for(int i = 1; i < names.size(); i++)
+    dc.DrawLine(xborder + xsz * i, yborder - 5, xborder + xsz * i, 10000);
+  
+  for(int i = 1; i < dat.size(); i++)
+    dc.DrawLine(0, yborder + ysz * i, 10000, yborder + ysz * i);*/
+  
   dc.SetPen(*wxBLACK_PEN);
   
   for(int i = 3; i < names.size(); i += 3)
@@ -124,7 +137,27 @@ void ForemanGrid::OnPaint(wxPaintEvent& event) {
   }
 }
 
-ForemanGrid::ForemanGrid(wxWindow *parent) : wxPanel(parent, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxVSCROLL | wxHSCROLL) {
+void ForemanGrid::OnMouse(wxMouseEvent &event) {
+  event.Skip();
+  
+  int x = event.GetX();
+  int y = event.GetY();
+  
+  x -= xborder;
+  y -= yborder;
+  
+  x /= xsz;
+  y /= ysz;
+  
+  if(y >= 0 && y < dat.size() && x >= 0 && x < dat[0].second.size()) {
+    Change rv = clicky->Run(make_pair(x, y));
+    if(rv != -1)
+      dat[y].second[x] = rv;
+    RefreshRect(wxRect(xborder + xsz * x, yborder + ysz * y, xsz, ysz));
+  }
+}
+
+ForemanGrid::ForemanGrid(wxWindow *parent, smart_ptr<Callback<Change, pair<int, int> > > clicky) : wxPanel(parent, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxVSCROLL | wxHSCROLL), clicky(clicky) {
 };
 
 /*************
@@ -142,6 +175,7 @@ public:
   void OnFullWrite(wxCommandEvent &event);
 
   void scan();
+  Change gridclicky(pair<int, int> val);
 
   smart_ptr<GameHandle> stdConnect();
   
@@ -191,6 +225,14 @@ void ForemanWindow::scan() {
   
   vector<pair<string, vector<Change> > > matrix = db.scan(hnd.get());
   grid->setGrid(matrix);
+}
+
+Change ForemanWindow::gridclicky(pair<int, int> val) {
+  smart_ptr<GameHandle> hnd = stdConnect();
+  if(!hnd.get())
+    return (Change)-1;
+  
+  return db.click(val.first, val.second, hnd.get());
 }
 
 smart_ptr<GameHandle> ForemanWindow::stdConnect() {
@@ -257,7 +299,7 @@ ForemanWindow::ForemanWindow() : wxFrame((wxFrame *)NULL, -1, foremanname, wxDef
   toolbar->Realize();
   toolbar->SetMinSize(wxSize(0, 25));  // this shouldn't be needed >:(
   
-  grid = new ForemanGrid(this);
+  grid = new ForemanGrid(this, NewFunctor(this, &ForemanWindow::gridclicky));
   
   wxBoxSizer *sizer = new wxBoxSizer(wxVERTICAL);
   sizer->Add(toolbar, 0, wxEXPAND);

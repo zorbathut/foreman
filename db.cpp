@@ -93,6 +93,35 @@ vector<pair<string, vector<Change> > > Db::scan(GameHandle *handle) {
   return rv;
 }
 
+Change Db::click(int x, int y, GameHandle *handle) {
+  dprintf("click at %d, %d\n", x, y);
+  
+  CHECK(y >= 0 && y < dinf.size());
+  
+  map<string, DwarfInfo>::iterator it = dinf.begin();
+  advance(it, y);
+  
+  it->second.jobs[inmap[x]] = (Change)!it->second.jobs[inmap[x]];
+  
+  {
+    smart_ptr<GameLock> lock = handle->lockGame();
+    vector<pair<string, DwarfInfo> > dat;
+    dat = lock->get();
+    
+    for(int i = 0; i < dat.size(); i++) {
+      for(int j = 0; j < ARRAY_SIZE(dat[i].second.jobs); j++)
+        dat[i].second.jobs[j] = C_MU;
+      if(dat[i].first == it->first) {
+        dat[i].second.jobs[inmap[x]] = it->second.jobs[inmap[x]];
+      }
+    }
+    
+    lock->set(dat);
+  }
+  
+  return it->second.jobs[inmap[x]];
+}
+
 Db::Db() {
   vector<pair<int, pair<int, int> > > sorty;
   for(int i = 0; i < ARRAY_SIZE(labor_text); i++)
