@@ -1,0 +1,76 @@
+
+STDCXXFLAGS := @STDCXXFLAGS@ -DDPRINTF_MARKUP -Wall -Wno-sign-compare -Wno-uninitialized -g -O2
+STDLDFLAGS := @STDLDFLAGS@ -g -O2
+
+FOREMANSOURCES := main
+FOREMANCXXFLAGS := `@WX@ --cxxflags` $(STDCXXFLAGS)
+FOREMANLDFLAGS := `@WX@ --libs --gl-libs` $(STDLDFLAGS)
+
+FUNCTORSOURCES := functor_gen debug parse util os
+CONSOLECXXFLAGS := $(STDCXXFLAGS) -O0
+CONSOLELDFLAGS := $(STDLDFLAGS) -O0
+
+CXX := g++
+CC := gcc
+
+all: foreman
+
+include $(patsubst %,build/%.f.d,$(FOREMANSOURCES))
+include $(patsubst %,build/%.c.d,$(FUNCTORSOURCES))
+
+foreman: foreman.exe
+
+foreman.exe: $(patsubst %,build/%.f.o,$(FOREMANSOURCES))
+	nice $(CXX) -o $@ $(patsubst %,build/%.f.o,$(FOREMANSOURCES)) $(FOREMANLDFLAGS)
+
+foreman-dbg.exe: $(patsubst %,build/%.f.d.o,$(FOREMANSOURCES))
+	nice $(CXX) -o $@ $(patsubst %,build/%.f.d.o,$(FOREMANSOURCES)) $(FOREMANLDFLAGS)
+
+clean:
+	rm -rf build/*.o *.exe build/*.d build/*.S
+
+run: foreman
+	./foreman.exe
+
+package: foreman vecedit data/shopcache.dwh
+	rm -rf deploy
+	rm -rf foreman.zip
+	mkdir deploy
+	cp foreman.exe deploy
+	cp /usr/mingw/local/lib/wxbase28_gcc_custom.dll deploy
+	cp /usr/mingw/local/lib/wxmsw28_core_gcc_custom.dll deploy
+	cp /usr/mingw/local/lib/wxmsw28_gl_gcc_custom.dll deploy
+	cp /usr/bin/mingwm10.dll deploy
+	strip -s deploy/*.exe deploy/*.dll
+	cd deploy ; zip -9 -r ../foreman.zip *  # This is really too many backslashes.
+	rm -rf deploy
+
+build/%.f.o: %.cpp
+	nice $(CXX) $(FOREMANCXXFLAGS) -c -o $@ $<
+  
+build/%.f.d.o: %.cpp
+	nice $(CXX) $(FOREMANCXXFLAGS) -c -o $@ $<
+
+build/%.f.S: %.cpp
+	nice $(CXX) $(FOREMANCXXFLAGS) -c -Wa,-a,-ad $< > $@
+
+build/%.f.d: %.cpp
+	nice bash -ec '$(CXX) $(FOREMANCXXFLAGS) -MM $< | sed "s!$*.o!build/$*.g.o build/$*.g.d.o $@!g" > $@'
+
+build/%.c.o: %.cpp
+	nice $(CXX) $(CONSOLECXXFLAGS) -c -o $@ $<
+
+build/%.c.S: %.cpp
+	nice $(CXX) $(CONSOLECXXFLAGS) -c -Wa,-a,-ad $< > $@
+
+build/%.c.d: %.cpp
+	nice bash -ec '$(CXX) $(CONSOLECXXFLAGS) -MM $< | sed "s!$*.o!build/$*.c.o build/$*.c.d.o $@!g" > $@'
+
+build/%.c.d: %.c
+	nice bash -ec '$(CXX) $(CONSOLECXXFLAGS) -MM $< | sed "s!$*.o!build/$*.c.o build/$*.c.d.o $@!g" > $@'
+
+functor_gen.exe: $(patsubst %,build/%.c.o,$(FUNCTORSOURCES))
+	nice $(CXX) -o $@ $(patsubst %,build/%.c.o,$(FUNCTORSOURCES)) $(CONSOLELDFLAGS)
+
+functor.h: functor_gen.exe functor.h.in
+	./functor_gen.exe || ( rm -f $@ && false )
