@@ -93,6 +93,22 @@ vector<pair<string, vector<Change> > > Db::scan(GameHandle *handle) {
   return rv;
 }
 
+void Db::full_write(GameHandle *handle) {
+  smart_ptr<GameLock> lock = handle->lockGame();
+  vector<pair<string, DwarfInfo> > dat;
+  dat = lock->get();
+  
+  for(int i = 0; i < dat.size(); i++) {
+    if(dinf.count(dat[i].first)) {
+      for(int j = 0; j < ARRAY_SIZE(dat[i].second.jobs); j++) {
+        dat[i].second.jobs[j] = dinf[dat[i].first].jobs[j];
+      }
+    }
+  }
+  
+  lock->set(dat);
+}
+
 Change Db::click(int x, int y, GameHandle *handle) {
   dprintf("click at %d, %d\n", x, y);
   

@@ -216,6 +216,8 @@ void ForemanWindow::OnFullWrite(wxCommandEvent &event) {
   smart_ptr<GameHandle> hnd = stdConnect();
   if(!hnd.get())
     return;
+  
+  db.full_write(hnd.get());
 }
 
 void ForemanWindow::scan() {

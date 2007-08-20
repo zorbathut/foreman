@@ -98,7 +98,7 @@ vector<pair<string, DwarfInfo> > GameLock::get() const {
     
     string prof = getMemoryLT(handle, addr + 0x60);
     
-    dprintf("Dwarfish: %08x %s is %d\n", addr, prof.c_str(), getMemoryDW(handle, addr + 0x78));
+    //dprintf("Dwarfish: %08x %s is %d\n", addr, prof.c_str(), getMemoryDW(handle, addr + 0x78));
     
     DwarfInfo info;
     for(int i = 0; i < ARRAY_SIZE(info.jobs); i++) {
