@@ -285,8 +285,8 @@ ForemanWindow::ForemanWindow() : wxFrame((wxFrame *)NULL, -1, foremanname, wxDef
   {
     wxMenu *menuFile = new wxMenu;
     
-    menuFile->Append(ID_Scan, "&Scan\tCtrl+C");
-    menuFile->Append(ID_FullWrite, "&Full write\tCtrl+F");
+    menuFile->Append(ID_Scan, "&Load from DF\tCtrl+C");
+    menuFile->Append(ID_FullWrite, "&Write to DF\tCtrl+F");
     
     menuBar->Append(menuFile, "&Edit");
   }
@@ -307,11 +307,11 @@ ForemanWindow::ForemanWindow() : wxFrame((wxFrame *)NULL, -1, foremanname, wxDef
   
   wxToolBar *toolbar = new wxToolBar(this, wxID_ANY);
   
-  toolbar->AddControl(new wxButton(toolbar, ID_Scan, "Scan"));
+  toolbar->AddControl(new wxButton(toolbar, ID_Scan, "Load from DF"));
   
   toolbar->AddSeparator();
   
-  toolbar->AddControl(new wxButton(toolbar, ID_FullWrite, "Full write"));
+  toolbar->AddControl(new wxButton(toolbar, ID_FullWrite, "Write to DF"));
   
   toolbar->Realize();
   toolbar->SetMinSize(wxSize(0, 25));  // this shouldn't be needed >:(

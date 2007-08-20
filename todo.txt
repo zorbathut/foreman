@@ -1,3 +1,6 @@
 - Make scroll work
+- Add legend
+- Highlight squares the mouse moves over
+- Include dwarf count, legendary count, idle count
 - Remove warnings
 - Separate categories

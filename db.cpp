@@ -53,6 +53,8 @@ vector<pair<string, vector<Change> > > Db::scan(GameHandle *handle) {
       CHECK(labor_text[i].descr == "(unknown)" && labor_text[i].type == "" || cname.count(labor_text[i].type));
   }
   
+  dinf.clear();
+  
   vector<pair<string, DwarfInfo> > dat;
   {
     smart_ptr<GameLock> lock = handle->lockGame();
