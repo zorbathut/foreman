@@ -35,7 +35,7 @@ I can be contacted at zorba-foreman@pavlovian.net
 
 using namespace std;
 
-const string foremanname =  "Dwarf Foreman";
+const string foremanname =  "Dwarf Foreman 0.9";
 
 /*************
  * ForemanGrid
@@ -182,6 +182,7 @@ public:
   
   void OnScan(wxCommandEvent &event);
   void OnFullWrite(wxCommandEvent &event);
+  void OnAbout(wxCommandEvent &event);
 
   void scan();
   vector<pair<string, vector<Change> > > gridclicky(pair<int, int> val);
@@ -214,6 +215,8 @@ BEGIN_EVENT_TABLE(ForemanWindow, wxFrame)
   EVT_TOOL(ID_Scan, ForemanWindow::OnScan)
   EVT_TOOL(ID_FullWrite, ForemanWindow::OnFullWrite)
 
+  EVT_MENU(ID_About, ForemanWindow::OnAbout)
+
   EVT_BUTTON(ID_Scan, ForemanWindow::OnScan)
   EVT_BUTTON(ID_FullWrite, ForemanWindow::OnFullWrite)
 END_EVENT_TABLE()
@@ -227,6 +230,9 @@ void ForemanWindow::OnFullWrite(wxCommandEvent &event) {
     return;
   
   db.full_write(hnd.get());
+}
+void ForemanWindow::OnAbout(wxCommandEvent &event) {
+  wxMessageBox(StringPrintf("%s, written by Ben Wilhelm.\n\nReleased under the GPL.\n\nLatest version and source available at http://www.pavlovian.net/foreman", foremanname.c_str()));
 }
 
 void ForemanWindow::scan() {

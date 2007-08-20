@@ -1,3 +1,0 @@
-- Military is mutually exclusive with woodcutting/mining
-- Add about dialog
-- Add version
