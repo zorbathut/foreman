@@ -28,6 +28,79 @@ I can be contacted at zorba-foreman@pavlovian.net
 
 using namespace std;
 
+struct LaborDescr {
+  string descr;
+  string type;
+  int priority;
+};
+
+const LaborDescr labor_text[] = {
+  { "Mining", "Miner", 0 },
+  { "Stone Hauling", "Peasant", 0},
+  { "Wood Hauling", "Peasant", 1 },
+  { "Burial", "Peasant", 8 },
+  { "Food Hauling", "Peasant", 3 },
+  { "Refuse Hauling", "Peasant", 4 },
+  { "Item Hauling", "Peasant", 2 },
+  { "Furniture Hauling", "Peasant", 5 },
+  { "Animal Hauling", "Peasant", 6 },
+  { "Cleaning", "Peasant", 7 },
+  { "Wood Cutting", "Carpenter", 0 },
+  { "Carpentry", "Carpenter", 1 },
+  { "Stone Detailing", "Miner", 1 },
+  { "Masonry", "Mason", 0 },
+  { "Architecture", "Mason", 1 },
+  { "Animal Training", "Trapper", 2 },
+  { "Animal Care", "Peasant", 9 },
+  { "Health Care", "Peasant", 10 },
+  { "Butchery", "Farmer", 3 },
+  { "Trapping", "Trapper", 0 },
+  { "Leatherworking", "Craftsdwarf", 2 },
+  { "Tanning", "Craftsdwarf", 8 },
+  { "Brewing", "Farmer", 2 },
+  { "Alchemy", "Craftsdwarf", 9 },
+  { "Weaving", "Craftsdwarf", 0 },
+  { "Clothes Making", "Craftsdwarf", 1 },
+  { "Milling", "Farmer", 4 },
+  { "Farming Workshop", "Farmer", 6 },
+  { "Cooking", "Farmer", 1 },
+  { "Farming", "Farmer", 0 },
+  { "Plant Gathering", "Farmer", 5 },
+  { "Fishing", "Fisherdwarf", 0 },
+  { "Fish Cleaning", "Fisherdwarf", 1 },
+  { "Hunting", "Trapper", 1 },
+  { "Furnace Operating", "Metalsmith", 1 },
+  { "(unknown)", "" },
+  { "(unknown)", "" },
+  { "Metalsmithing", "Metalsmith", 0 },
+  { "Jeweling", "Jeweler", 5 },
+  { "Craftsworking", "Craftsdwarf", 3 },
+  { "Glassmaking", "Craftsdwarf", 4 },
+  { "(unknown)", "" },
+  { "(unknown)", "" },
+  { "(unknown)", "" },
+  { "(unknown)", "" },
+  { "(unknown)", "" },
+  { "(unknown)", "" },
+  { "(unknown)", "" },
+  { "(unknown)", "" },
+  { "(unknown)", "" },
+  { "(unknown)", "" },
+  { "(unknown)", "" },
+  { "(unknown)", "" },
+  { "(unknown)", "" },
+  { "Siege Engineering", "Peasant", 11 },
+  { "Siege Operating", "Peasant", 12 },
+  { "Crossbow Making", "Carpenter", 2 },
+  { "Mechanics", "Mechanic", 0 },
+  { "(unknown)", "" },
+  { "(unknown)", "" },
+  { "Dyeing", "Craftsdwarf", 7 },
+  { "Wood Burning", "Carpenter", 3 },
+  { "(unknown)", "" },
+  { "Ashery Operating", "Carpenter", 4 },
+};
+
 class Db {
   map<int, int> outmap;
   vector<int> inmap;
@@ -40,6 +113,8 @@ public:
   
   vector<pair<string, vector<Change> > > scan(GameHandle *handle);
   void full_write(GameHandle *handle);
+
+  const vector<string> &getNames() const { return names; }
 
   Change click(int x, int y, GameHandle *handle); // returns the new value of that spot
 

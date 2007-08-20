@@ -42,10 +42,12 @@ const string foremanname =  "Dwarf Foreman";
 
 class ForemanGrid : public wxPanel, boost::noncopyable {
   vector<pair<string, vector<Change> > > dat;
+  vector<string> names;
   
 public:
 
   void setGrid(const vector<pair<string, vector<Change> > > &foo);
+  void setNames(const vector<string> &in_names) { names = in_names; };
   
   void OnPaint(wxPaintEvent& event);
 
@@ -63,14 +65,24 @@ void ForemanGrid::setGrid(const vector<pair<string, vector<Change> > > &foo) {
   Refresh();
 }
 
-const int xsz = 16;
-const int ysz = 16;
+int xsz = 16;
+int ysz = 16;
 
-const int xborder = 50;
-const int yborder = 50;
+int xborder = 50;
+int yborder = 80;
 
 void ForemanGrid::OnPaint(wxPaintEvent& event) {
   wxPaintDC dc(this);
+  
+  dc.SetFont(*wxSWISS_FONT);
+  
+  xborder = 0;
+  for(int i = 0; i < dat.size(); i++) {
+    wxCoord w;
+    wxCoord h;
+    dc.GetTextExtent(dat[i].first, &w, &h);
+    xborder = max(xborder, w + 15);
+  }
   
   dc.SetPen(*wxTRANSPARENT_PEN);
   
@@ -95,13 +107,21 @@ void ForemanGrid::OnPaint(wxPaintEvent& event) {
   
   dc.SetPen(*wxBLACK_PEN);
   
-  if(dat.size()) {
-    for(int i = 0; i < dat[0].second.size() - 1; i++)
-      dc.DrawLine(xborder + xsz * (i + 1), 0, xborder + xsz * (i + 1), 10000);
-  }
+  for(int i = 3; i < names.size(); i += 3)
+    dc.DrawLine(xborder + xsz * i, yborder - 5, xborder + xsz * i, 10000);
   
   for(int i = 3; i < dat.size(); i += 3)
     dc.DrawLine(0, yborder + ysz * i, 10000, yborder + ysz * i);
+  
+  for(int i = 0; i < dat.size(); i++)
+    dc.DrawText(dat[i].first, 0, yborder + ysz * i);
+  
+  for(int i = 0; i < names.size(); i++) {
+    wxCoord w;
+    wxCoord h;
+    dc.GetTextExtent(names[i], &w, &h);
+    dc.DrawRotatedText(names[i], xborder + xsz * i - w * 0.68 + xsz, yborder - w * 0.68 - 15, -45);
+  }
 }
 
 ForemanGrid::ForemanGrid(wxWindow *parent) : wxPanel(parent, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxVSCROLL | wxHSCROLL) {
@@ -243,6 +263,10 @@ ForemanWindow::ForemanWindow() : wxFrame((wxFrame *)NULL, -1, foremanname, wxDef
   sizer->Add(toolbar, 0, wxEXPAND);
   sizer->Add(grid, 1, wxEXPAND);
   SetSizer(sizer);
+  
+  grid->setNames(db.getNames());
+  
+  scan();
 }
 
 /*************

@@ -21,6 +21,7 @@ I can be contacted at zorba-foreman@pavlovian.net
 
 #include "poker.h"
 #include "util.h"
+#include "db.h"
 
 #include <tlhelp32.h>
 
@@ -101,9 +102,13 @@ vector<pair<string, DwarfInfo> > GameLock::get() const {
     
     DwarfInfo info;
     for(int i = 0; i < ARRAY_SIZE(info.jobs); i++) {
-      char kar = getMemoryChar(handle, addr + 0x460 + i);
-      CHECK(!!kar == kar);
-      info.jobs[i] = (Change)kar;
+      if(labor_text[i].descr[0] == '(') {
+        info.jobs[i] = C_MU;
+      } else {
+        char kar = getMemoryChar(handle, addr + 0x460 + i);
+        CHECK(!!kar == kar);
+        info.jobs[i] = (Change)kar;
+      }
     }
     
     rv.push_back(make_pair(prof, info));
