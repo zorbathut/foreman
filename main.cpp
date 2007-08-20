@@ -35,7 +35,7 @@ I can be contacted at zorba-foreman@pavlovian.net
 
 using namespace std;
 
-const string foremanname =  "Dwarf Foreman 0.9";
+const string foremanname =  "Dwarf Foreman 0.1 beta";
 
 /*************
  * ForemanGrid
@@ -166,7 +166,7 @@ void ForemanGrid::OnMouse(wxMouseEvent &event) {
   }
 }
 
-ForemanGrid::ForemanGrid(wxWindow *parent, smart_ptr<Callback<vector<pair<string, vector<Change> > >, pair<int, int> > > clicky) : wxPanel(parent, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxVSCROLL | wxHSCROLL), clicky(clicky) {
+ForemanGrid::ForemanGrid(wxWindow *parent, smart_ptr<Callback<vector<pair<string, vector<Change> > >, pair<int, int> > > clicky) : wxPanel(parent, wxID_ANY/*, wxDefaultPosition, wxDefaultSize, wxVSCROLL | wxHSCROLL*/), clicky(clicky) {
 };
 
 /*************

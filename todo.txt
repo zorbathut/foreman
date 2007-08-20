@@ -1,0 +1,3 @@
+- Make scroll work
+- Remove warnings
+- Separate categories
