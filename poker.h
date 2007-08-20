@@ -39,20 +39,31 @@ class DwarfInfo {
 };
 
 class GameLock {
+  HANDLE handle;
+  DWORD pid;
+  
+public:
+  
   vector<pair<string, DwarfInfo> > get() const;
   
   void set(const vector<DwarfInfo> &info);
+
+  GameLock(HANDLE handle, DWORD pid);
+  ~GameLock();
 };
 
 class GameHandle {
   
   HANDLE handle;
+  DWORD pid;
   
 public:
   
   smart_ptr<GameLock> lockGame();
+  bool live() const;
 
-  explicit GameHandle(HANDLE handle) : handle(handle) { };
+  GameHandle(HANDLE handle, DWORD pid) : handle(handle), pid(pid) { }
+  ~GameHandle() { CloseHandle(handle); }
 
 };
 

@@ -1,5 +1,5 @@
 
-STDCXXFLAGS := @STDCXXFLAGS@ -DDPRINTF_MARKUP -Wall -Wno-sign-compare -Wno-uninitialized -g -O2
+STDCXXFLAGS := @STDCXXFLAGS@ -DDPRINTF_MARKUP -D_WIN32_WINNT=0x0500 -Wall -Wno-sign-compare -Wno-uninitialized -g -O2
 STDLDFLAGS := @STDLDFLAGS@ -g -O2
 
 FOREMANSOURCES := main debug parse util os poker

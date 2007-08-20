@@ -21,6 +21,42 @@ I can be contacted at zorba-foreman@pavlovian.net
 
 #include "poker.h"
 
+#include <tlhelp32.h>
+
+void SuspendProcess(DWORD pid, bool suspend) { 
+  HANDLE snapshot;
+
+  snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPTHREAD, 0); 
+  CHECK(snapshot != INVALID_HANDLE_VALUE);
+  
+  THREADENTRY32 thread;
+  thread.dwSize = sizeof(THREADENTRY32); 
+ 
+  CHECK(Thread32First(snapshot, &thread));
+ 
+  do { 
+    if(thread.th32OwnerProcessID == pid) {
+      HANDLE tt = OpenThread(THREAD_SUSPEND_RESUME, FALSE, thread.th32ThreadID);
+      dprintf("Found thread %p\n", tt);
+      if(suspend) {
+        SuspendThread(tt);
+      } else {
+        ResumeThread(tt);
+      }
+      CloseHandle(tt);
+    }
+  } while(Thread32Next(snapshot, &thread));
+  
+  CloseHandle(snapshot); 
+}
+
+GameLock::GameLock(HANDLE handle, DWORD pid) : handle(handle), pid(pid) { SuspendProcess(pid, true); };
+GameLock::~GameLock() { SuspendProcess(pid, false); };
+
+smart_ptr<GameLock> GameHandle::lockGame() {
+  return smart_ptr<GameLock>(new GameLock(handle, pid));
+}
+
 boost::optional<GameHandle> getGameHandle() {
   HANDLE rv;
   
@@ -28,26 +64,14 @@ boost::optional<GameHandle> getGameHandle() {
   DWORD pid;
   
   wnd = FindWindow(NULL, "Dwarf Fortress");
-  dprintf("%08x\n", wnd);
+  dprintf("%p\n", wnd);
   GetWindowThreadProcessId(wnd, &pid);
-  dprintf("%08x\n", pid);
+  dprintf("%08x\n", (unsigned int)pid);
   rv = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
-  dprintf("%08x\n", rv);
+  dprintf("%p\n", rv);
   
   if(rv == NULL)
     return boost::optional<GameHandle>();
   
-  return GameHandle(rv);
-}
-
-HANDLE GetProcess(char name[]){
-	HANDLE handle;
-	HWND h_window;
-	DWORD pid;
-
-	h_window = FindWindow(NULL,name);
-	GetWindowThreadProcessId(h_window,&pid);
-	handle = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
-
-	return(handle);
+  return GameHandle(rv, pid);
 }

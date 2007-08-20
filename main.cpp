@@ -141,5 +141,9 @@ bool ForemanMain::OnInit() {
   CHECK(gh);
   dprintf("Got game handle\n");
   
+  {
+    smart_ptr<GameLock> gl = gh->lockGame();
+  }
+  
   return true;
 }
