@@ -26,6 +26,8 @@ I can be contacted at zorba-foreman@pavlovian.net
 #include <wx/tbarbase.h>
 #include <wx/spinctrl.h>
 
+#include "poker.h"
+
 using namespace std;
 
 const string foremanname =  "Dwarf Foreman";
@@ -112,6 +114,10 @@ ForemanWindow::ForemanWindow() : wxFrame((wxFrame *)NULL, -1, foremanname, wxDef
   
   toolbar->AddControl(new wxButton(toolbar, ID_Scan, "Scan"));
   
+  toolbar->AddSeparator();
+  
+  toolbar->AddControl(new wxButton(toolbar, ID_Scan, "Full write"));
+  
   toolbar->Realize();
   toolbar->SetMinSize(wxSize(0, 25));  // this shouldn't be needed >:(
 }
@@ -130,5 +136,10 @@ bool ForemanMain::OnInit() {
   wxFrame *frame = new ForemanWindow();
   frame->Show(true);
   SetTopWindow(frame);
+  
+  boost::optional<GameHandle> gh = getGameHandle();
+  CHECK(gh);
+  dprintf("Got game handle\n");
+  
   return true;
 }

@@ -2,7 +2,7 @@
 STDCXXFLAGS := @STDCXXFLAGS@ -DDPRINTF_MARKUP -Wall -Wno-sign-compare -Wno-uninitialized -g -O2
 STDLDFLAGS := @STDLDFLAGS@ -g -O2
 
-FOREMANSOURCES := main
+FOREMANSOURCES := main debug parse util os poker
 FOREMANCXXFLAGS := `@WX@ --cxxflags` $(STDCXXFLAGS)
 FOREMANLDFLAGS := `@WX@ --libs --gl-libs` $(STDLDFLAGS)
 
