@@ -32,14 +32,13 @@ clean:
 run: foreman
 	./foreman.exe
 
-package: foreman vecedit data/shopcache.dwh
+package: foreman
 	rm -rf deploy
 	rm -rf foreman.zip
 	mkdir deploy
 	cp foreman.exe deploy
 	cp /usr/mingw/local/lib/wxbase28_gcc_custom.dll deploy
 	cp /usr/mingw/local/lib/wxmsw28_core_gcc_custom.dll deploy
-	cp /usr/mingw/local/lib/wxmsw28_gl_gcc_custom.dll deploy
 	cp /usr/bin/mingwm10.dll deploy
 	strip -s deploy/*.exe deploy/*.dll
 	cd deploy ; zip -9 -r ../foreman.zip *  # This is really too many backslashes.

@@ -35,7 +35,7 @@ I can be contacted at zorba-foreman@pavlovian.net
 
 using namespace std;
 
-const string foremanname =  "Dwarf Foreman 0.1 beta";
+const string foremanname =  "Dwarf Foreman 0.1.1 beta";
 
 /*************
  * ForemanGrid
@@ -237,7 +237,7 @@ void ForemanWindow::OnAbout(wxCommandEvent &event) {
 
 void ForemanWindow::scan() {
   smart_ptr<GameHandle> hnd = stdConnect();
-  if(!hnd.get())
+  if(hnd.empty())
     return;
   
   vector<pair<string, vector<Change> > > matrix = db.scan(hnd.get());
@@ -246,7 +246,7 @@ void ForemanWindow::scan() {
 
 vector<pair<string, vector<Change> > > ForemanWindow::gridclicky(pair<int, int> val) {
   smart_ptr<GameHandle> hnd = stdConnect();
-  if(!hnd.get())
+  if(hnd.empty())
     return vector<pair<string, vector<Change> > >();
   
   return db.click(val.first, val.second, hnd.get());
@@ -254,7 +254,7 @@ vector<pair<string, vector<Change> > > ForemanWindow::gridclicky(pair<int, int> 
 
 smart_ptr<GameHandle> ForemanWindow::stdConnect() {
   smart_ptr<GameHandle> hand = getGameHandle();
-  if(hand.get()) {
+  if(!hand.empty()) {
     SetStatusText("");
   } else {
     SetStatusText("Couldn't connect to Dwarf Fortress, is it running?");
@@ -263,7 +263,7 @@ smart_ptr<GameHandle> ForemanWindow::stdConnect() {
   return hand;
 }
 
-ForemanWindow::ForemanWindow() : wxFrame((wxFrame *)NULL, -1, foremanname, wxDefaultPosition, wxSize(800, 600)) {
+ForemanWindow::ForemanWindow() : wxFrame((wxFrame *)NULL, -1, foremanname, wxDefaultPosition, wxSize(1000, 600)) {
   wxMenuBar *menuBar = new wxMenuBar;
   
   {
