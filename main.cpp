@@ -43,14 +43,14 @@ const string foremanname =  "Dwarf Foreman 0.1.2 beta";
 
 class ForemanGrid : public wxPanel, boost::noncopyable {
   vector<pair<string, vector<Change> > > dat;
-  vector<string> names;
+  vector<pair<string, Color> > names;
   
   smart_ptr<Callback<vector<pair<string, vector<Change> > >, pair<int, int> > > clicky;
   
 public:
 
   void setGrid(const vector<pair<string, vector<Change> > > &foo);
-  void setNames(const vector<string> &in_names) { names = in_names; };
+  void setNames(const vector<pair<string, Color> > &in_names) { names = in_names; };
   
   void OnPaint(wxPaintEvent& event);
   void OnMouse(wxMouseEvent &event);
@@ -132,10 +132,18 @@ void ForemanGrid::OnPaint(wxPaintEvent& event) {
   for(int i = 0; i < names.size(); i++) {
     wxCoord w;
     wxCoord h;
-    dc.GetTextExtent(names[i], &w, &h);
-    dc.DrawRotatedText(names[i], xborder + xsz * i - w * 0.68 + xsz, yborder - w * 0.68 - 15, -45);
+    dc.GetTextExtent(names[i].first, &w, &h);
+    dc.DrawRotatedText(names[i].first, (int)(xborder + xsz * i - w * 0.68 + xsz), (int)(yborder - w * 0.68 - 15), -45);
   }
 }
+
+inline int findname(const vector<pair<string, Color> > &names, const string &name) {
+  for(int i = 0; i < names.size(); i++)
+    if(names[i].first == name)
+      return i;
+  CHECK(0);
+}
+
 
 void ForemanGrid::OnMouse(wxMouseEvent &event) {
   event.Skip();
@@ -153,9 +161,9 @@ void ForemanGrid::OnMouse(wxMouseEvent &event) {
     vector<pair<string, vector<Change> > > dt = clicky->Run(make_pair(x, y));
     if(dt.size())
       dat = dt;
-    if(names[x] == "Wood Cutting" || names[x] == "Mining") {
-      int a = distance(names.begin(), find(names.begin(), names.end(), "Wood Cutting"));
-      int b = distance(names.begin(), find(names.begin(), names.end(), "Mining"));
+    if(names[x].first == "Wood Cutting" || names[x].first == "Mining") {
+      int a = findname(names, "Wood Cutting");
+      int b = findname(names, "Mining");
       if(a > b)
         swap(a, b);
       RefreshRect(wxRect(xborder + xsz * a, yborder + ysz * y, (b - a + 1) * xsz, ysz));

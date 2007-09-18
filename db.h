@@ -47,11 +47,11 @@ const LaborDescr labor_text[] = {
   { "Cleaning", "Peasant", 7 },
   { "Wood Cutting", "Carpenter", 0 },
   { "Carpentry", "Carpenter", 1 },
-  { "Stone Detailing", "Miner", 1 },
+  { "Stone Detailing", "Mason", 1 },
   { "Masonry", "Mason", 0 },
   { "Architecture", "Mason", 1 },
   { "Animal Training", "Trapper", 2 },
-  { "Animal Care", "Peasant", 9 },
+  { "Animal Care", "Trapper", 9 },
   { "Health Care", "Peasant", 10 },
   { "Butchery", "Farmer", 3 },
   { "Trapping", "Trapper", 0 },
@@ -89,7 +89,7 @@ const LaborDescr labor_text[] = {
   { "(unknown)", "" },
   { "(unknown)", "" },
   { "(unknown)", "" },
-  { "Siege Engineering", "Peasant", 11 },
+  { "Siege Engineering", "Carpenter", 11 },
   { "Siege Operating", "Peasant", 12 },
   { "Crossbow Making", "Carpenter", 2 },
   { "Mechanics", "Mechanic", 0 },
@@ -101,10 +101,17 @@ const LaborDescr labor_text[] = {
   { "Ashery Operating", "Carpenter", 4 },
 };
 
+struct Color {
+  unsigned char r, g, b;
+  
+  Color() { };
+  Color(unsigned char r, unsigned char g, unsigned char b) : r(r), g(g), b(b) { };
+};
+
 class Db {
   map<int, int> outmap;
   vector<int> inmap;
-  vector<string> names;
+  vector<pair<string, Color> > names;
   vector<string> types;
   
   map<string, DwarfInfo> dinf;
@@ -114,7 +121,7 @@ public:
   vector<pair<string, vector<Change> > > scan(GameHandle *handle);
   void full_write(GameHandle *handle);
 
-  const vector<string> &getNames() const { return names; }
+  const vector<pair<string, Color> > &getNames() const { return names; }
 
   vector<pair<string, vector<Change> > > click(int x, int y, GameHandle *handle); // returns the new value of everything
   

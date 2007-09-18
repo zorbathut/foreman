@@ -33,7 +33,7 @@ void getMemory(HANDLE handle, DWORD address, void *target, int bytes) {
 }
 
 void setMemory(HANDLE handle, DWORD address, void *target, int bytes) {
-  DWORD obytes = -1;
+  DWORD obytes = 0xffffffff;
   int rv = WriteProcessMemory(handle, (void*)address, target, bytes, &obytes);
   CHECK(obytes == bytes);
   CHECK(rv);

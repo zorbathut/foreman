@@ -43,6 +43,21 @@ const string color_text[] = {
   "Peasant",
 };
 
+const Color color_col[] = {
+  Color(0xc0, 0xc0, 0xc0),
+  Color(255, 255, 255),
+  Color(255, 255, 0),
+  Color(127, 127, 127),
+  Color(0, 127, 0),
+  Color(0, 255, 0),
+  Color(255, 0, 0),
+  Color(127, 127, 0),
+  Color(127, 0, 0),
+  Color(255, 0, 0),
+  Color(0, 127, 127),
+  Color(0, 0, 0),
+};
+
 vector<pair<string, vector<Change> > > Db::scan(GameHandle *handle) {
   {
     DwarfInfo dinf;
@@ -88,6 +103,13 @@ vector<pair<string, vector<Change> > > Db::scan(GameHandle *handle) {
   return dump();
 }
 
+inline int findname(const vector<pair<string, Color> > &names, const string &name) {
+  for(int i = 0; i < names.size(); i++)
+    if(names[i].first == name)
+      return i;
+  CHECK(0);
+}
+
 void Db::full_write(GameHandle *handle) {
   smart_ptr<GameLock> lock = handle->lockGame();
   vector<pair<string, DwarfInfo> > dat;
@@ -99,7 +121,7 @@ void Db::full_write(GameHandle *handle) {
         dat[i].second.jobs[j] = dinf[dat[i].first].jobs[j];
       }
       
-      if(dinf[dat[i].first].jobs[inmap[distance(names.begin(), find(names.begin(), names.end(), "Wood Cutting"))]] == C_YES) {
+      if(dinf[dat[i].first].jobs[inmap[findname(names, "Wood Cutting")]] == C_YES) {
         // disable all weapons, enable axe
         dat[i].second.jobs[0x29] = C_YES;
         dat[i].second.jobs[0x2a] = C_NO;
@@ -108,7 +130,7 @@ void Db::full_write(GameHandle *handle) {
         dat[i].second.jobs[0x2d] = C_NO;
         dat[i].second.jobs[0x2e] = C_NO;
         dat[i].second.jobs[0x2f] = C_NO;
-      } else if(dinf[dat[i].first].jobs[inmap[distance(names.begin(), find(names.begin(), names.end(), "Mining"))]] == C_YES) {
+      } else if(dinf[dat[i].first].jobs[inmap[findname(names, "Wood Cutting")]] == C_YES) {
         // disable all weapons
         dat[i].second.jobs[0x29] = C_NO;
         dat[i].second.jobs[0x2a] = C_NO;
@@ -133,11 +155,11 @@ vector<pair<string, vector<Change> > > Db::click(int x, int y, GameHandle *handl
   advance(it, y);
   
   
-  while(names[x] == "Wood Cutting" && !it->second.jobs[inmap[x]] && it->second.jobs[inmap[distance(names.begin(), find(names.begin(), names.end(), "Mining"))]] != C_NO)
-    click(distance(names.begin(), find(names.begin(), names.end(), "Mining")), y, handle);  // turn mining off if we're turning woodcutting on
+  while(names[x].first == "Wood Cutting" && !it->second.jobs[inmap[x]] && it->second.jobs[inmap[findname(names, "Mining")]] != C_NO)
+    click(findname(names, "Mining"), y, handle);  // turn mining off if we're turning woodcutting on
   
-  while(names[x] == "Mining" && !it->second.jobs[inmap[x]] && it->second.jobs[inmap[distance(names.begin(), find(names.begin(), names.end(), "Wood Cutting"))]] != C_NO)
-    click(distance(names.begin(), find(names.begin(), names.end(), "Wood Cutting")), y, handle);  // turn woodcutting off if we're turning mining on
+  while(names[x].first == "Mining" && !it->second.jobs[inmap[x]] && it->second.jobs[inmap[findname(names, "Wood Cutting")]] != C_NO)
+    click(findname(names, "Wood Cutting"), y, handle);  // turn woodcutting off if we're turning mining on
   
   it->second.jobs[inmap[x]] = (Change)!it->second.jobs[inmap[x]]; // we do this *afterwards* so we can't end up in a cycle of infinite toggling
   
@@ -153,7 +175,7 @@ vector<pair<string, vector<Change> > > Db::click(int x, int y, GameHandle *handl
       if(dat[i].first == it->first) {
         dat[i].second.jobs[inmap[x]] = it->second.jobs[inmap[x]];
         
-        if(names[x] == "Wood Cutting" && it->second.jobs[inmap[x]] == C_YES) {
+        if(names[x].first == "Wood Cutting" && it->second.jobs[inmap[x]] == C_YES) {
           // disable all weapons, enable axe
           dat[i].second.jobs[0x29] = C_YES;
           dat[i].second.jobs[0x2a] = C_NO;
@@ -162,7 +184,7 @@ vector<pair<string, vector<Change> > > Db::click(int x, int y, GameHandle *handl
           dat[i].second.jobs[0x2d] = C_NO;
           dat[i].second.jobs[0x2e] = C_NO;
           dat[i].second.jobs[0x2f] = C_NO;
-        } else if(names[x] == "Mining" && it->second.jobs[inmap[x]] == C_YES) {
+        } else if(names[x].first == "Mining" && it->second.jobs[inmap[x]] == C_YES) {
           // disable all weapons
           dat[i].second.jobs[0x29] = C_NO;
           dat[i].second.jobs[0x2a] = C_NO;
@@ -204,7 +226,7 @@ Db::Db() {
   for(int i = 0; i < sorty.size(); i++) {
     outmap[sorty[i].second.second] = i;
     inmap.push_back(sorty[i].second.second);
-    names.push_back(labor_text[sorty[i].second.second].descr);
+    names.push_back(make_pair(labor_text[sorty[i].second.second].descr, color_col[distance(color_text, find(color_text, color_text + ARRAY_SIZE(color_text), labor_text[sorty[i].second.second].descr))]));
     types.push_back(color_text[sorty[i].first]);
     dprintf("%s: %s\n", color_text[sorty[i].first].c_str(), labor_text[sorty[i].second.second].descr.c_str());
   }
