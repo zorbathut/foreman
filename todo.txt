@@ -1,5 +1,3 @@
-- ignore children
-- ignore nobles
 - Make scroll work
 - Add legend
 - Highlight squares the mouse moves over

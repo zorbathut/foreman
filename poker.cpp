@@ -74,7 +74,24 @@ bool isLivingDwarf(HANDLE handle, DWORD address) {
   if(getMemoryDW(handle, address + 0x78) != 72)
     return false;
   
-  return true;
+  int type = getMemoryDW(handle, address + 0x70);
+  
+  if(0
+    || type == 0x00   // miner
+    || type == 0x01   // carpenter
+    || type == 0x02   // mason
+    || type == 0x03   // trapper
+    || type == 0x04   // metalsmith
+    || type == 0x05   // jeweler
+    || type == 0x06   // craftsman
+    || type == 0x09   // fisherman
+    || type == 0x0A   // farmer
+    || type == 0x0B   // mechanic
+    || type == 0x52   // peasant
+  )
+    return true;
+  
+  return false;
 }
 
 const DWORD critter_start = 0x00ACB3EC;
