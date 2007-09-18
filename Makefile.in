@@ -41,7 +41,7 @@ package: foreman
 	cp /usr/mingw/local/lib/wxmsw28_core_gcc_custom.dll deploy
 	cp /usr/bin/mingwm10.dll deploy
 	strip -s deploy/*.exe deploy/*.dll
-	cd deploy ; zip -9 -r ../foreman.zip *  # This is really too many backslashes.
+	cd deploy ; zip -9 -r ../foreman.zip *
 	rm -rf deploy
 
 build/%.f.o: %.cpp
@@ -54,7 +54,7 @@ build/%.f.S: %.cpp
 	nice $(CXX) $(FOREMANCXXFLAGS) -c -Wa,-a,-ad $< > $@
 
 build/%.f.d: %.cpp
-	nice bash -ec '$(CXX) $(FOREMANCXXFLAGS) -MM $< | sed "s!$*.o!build/$*.g.o build/$*.g.d.o $@!g" > $@'
+	nice bash -ec '$(CXX) $(FOREMANCXXFLAGS) -MM $< | sed "s!$*.o!build/$*.f.o build/$*.f.d.o $@!g" > $@'
 
 build/%.c.o: %.cpp
 	nice $(CXX) $(CONSOLECXXFLAGS) -c -o $@ $<
