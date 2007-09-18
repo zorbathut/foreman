@@ -41,11 +41,13 @@ const string foremanname =  "Dwarf Foreman 0.1.3 beta";
  * ForemanGrid
  */
 
-class ForemanGrid : public wxPanel, boost::noncopyable {
+class ForemanGrid : public wxScrolledWindow, boost::noncopyable {
   vector<pair<string, vector<Change> > > dat;
   vector<pair<string, Color> > names;
   
   smart_ptr<Callback<vector<pair<string, vector<Change> > >, pair<int, int> > > clicky;
+  
+  void ScrolledRR(const wxRect &rec);
   
 public:
 
@@ -64,20 +66,33 @@ BEGIN_EVENT_TABLE(ForemanGrid, wxPanel)
   EVT_LEFT_DOWN(ForemanGrid::OnMouse)
 END_EVENT_TABLE()
 
-void ForemanGrid::setGrid(const vector<pair<string, vector<Change> > > &foo) {
-  dat = foo;
-  
-  Refresh();
-}
-
 int xsz = 16;
 int ysz = 16;
 
 int xborder = 50;
 int yborder = 88;
 
+void ForemanGrid::setGrid(const vector<pair<string, vector<Change> > > &foo) {
+  dat = foo;
+  
+  {
+    int segments = 0;
+    for(int i = 0; i < names.size(); i++)
+      if(i && names[i].second != names[i-1].second)
+        segments++;
+    if(dat.size()) {
+      SetVirtualSize(xborder + xsz * (dat[0].second.size() + segments) + xsz / 2, yborder + ysz * dat.size() + ysz / 2);
+      SetScrollRate(20, 20);
+    }
+  }
+  
+  
+  Refresh();
+}
+
 void ForemanGrid::OnPaint(wxPaintEvent& event) {
   wxPaintDC dc(this);
+  DoPrepareDC(dc);
   
   dc.SetFont(*wxSWISS_FONT);
   
@@ -176,12 +191,18 @@ inline int findname(const vector<pair<string, Color> > &names, const string &nam
   CHECK(0);
 }
 
+void ForemanGrid::ScrolledRR(const wxRect &rec) {
+  wxRect rec2 = rec;
+  CalcScrolledPosition(rec.x, rec.y, &rec2.x, &rec2.y); 
+  RefreshRect(rec2);
+}
 
 void ForemanGrid::OnMouse(wxMouseEvent &event) {
   event.Skip();
   
-  int x = event.GetX();
-  int y = event.GetY();
+  int x;
+  int y;
+  CalcUnscrolledPosition(event.GetX(), event.GetY(), &x, &y);
   
   x -= xborder;
   y -= yborder;
@@ -213,15 +234,15 @@ void ForemanGrid::OnMouse(wxMouseEvent &event) {
       int b = findname(names, "Mining");
       if(a > b)
         swap(a, b);
-      RefreshRect(wxRect(xborder + xsz * a, yborder + ysz * y, (b - a + 3) * xsz, ysz));
+      ScrolledRR(wxRect(xborder + xsz * a, yborder + ysz * y, (b - a + 3) * xsz, ysz));
       // whee hack
     } else {
-      RefreshRect(wxRect(xborder + xsz * ox + xsz / 2, yborder + ysz * oy, xsz, ysz));
+      ScrolledRR(wxRect(xborder + xsz * ox + xsz / 2, yborder + ysz * oy, xsz, ysz));
     }
   }
 }
 
-ForemanGrid::ForemanGrid(wxWindow *parent, smart_ptr<Callback<vector<pair<string, vector<Change> > >, pair<int, int> > > clicky) : wxPanel(parent, wxID_ANY/*, wxDefaultPosition, wxDefaultSize, wxVSCROLL | wxHSCROLL*/), clicky(clicky) {
+ForemanGrid::ForemanGrid(wxWindow *parent, smart_ptr<Callback<vector<pair<string, vector<Change> > >, pair<int, int> > > clicky) : wxScrolledWindow(parent, wxID_ANY), clicky(clicky) {
 };
 
 /*************
