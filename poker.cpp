@@ -26,7 +26,7 @@ I can be contacted at zorba-foreman@pavlovian.net
 #include <tlhelp32.h>
 
 void getMemory(HANDLE handle, DWORD address, void *target, int bytes) {
-  DWORD obytes = -1;
+  DWORD obytes = 0xffffffff;
   int rv = ReadProcessMemory(handle, (void*)address, target, bytes, &obytes);
   CHECK(obytes == bytes);
   CHECK(rv);
@@ -101,7 +101,7 @@ vector<pair<string, DwarfInfo> > GameLock::get() const {
   DWORD end = getMemoryDW(handle, critter_start + 4);
   CHECK(start % 4 == 0);
   CHECK(end % 4 == 0);
-  dprintf("SE is %08x %08x\n", start, end);
+  dprintf("SE is %08x %08x\n", (unsigned int)start, (unsigned int)end);
   DWORD count = (end - start) / 4;
   
   vector<pair<string, DwarfInfo> > rv;
@@ -139,7 +139,7 @@ void GameLock::set(const vector<pair<string, DwarfInfo> > &sinf) {
   DWORD end = getMemoryDW(handle, critter_start + 4);
   CHECK(start % 4 == 0);
   CHECK(end % 4 == 0);
-  dprintf("SE is %08x %08x\n", start, end);
+  dprintf("SE is %08x %08x\n", (unsigned int)start, (unsigned int)end);
   DWORD count = (end - start) / 4;
   
   vector<pair<string, DwarfInfo> > rv;

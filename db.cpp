@@ -41,6 +41,7 @@ const string color_text[] = {
   "Fisherdwarf",
   "Mechanic",
   "Peasant",
+  "Adamantine",
 };
 
 const Color color_col[] = {
@@ -50,11 +51,12 @@ const Color color_col[] = {
   Color(127, 127, 127),
   Color(0, 127, 0),
   Color(0, 255, 0),
-  Color(255, 0, 0),
+  Color(0, 0, 255),
   Color(127, 127, 0),
   Color(127, 0, 0),
   Color(255, 0, 0),
   Color(0, 127, 127),
+  Color(0, 255, 255),
   Color(0, 0, 0),
 };
 
@@ -226,7 +228,7 @@ Db::Db() {
   for(int i = 0; i < sorty.size(); i++) {
     outmap[sorty[i].second.second] = i;
     inmap.push_back(sorty[i].second.second);
-    names.push_back(make_pair(labor_text[sorty[i].second.second].descr, color_col[distance(color_text, find(color_text, color_text + ARRAY_SIZE(color_text), labor_text[sorty[i].second.second].descr))]));
+    names.push_back(make_pair(labor_text[sorty[i].second.second].descr, color_col[sorty[i].first]));
     types.push_back(color_text[sorty[i].first]);
     dprintf("%s: %s\n", color_text[sorty[i].first].c_str(), labor_text[sorty[i].second.second].descr.c_str());
   }

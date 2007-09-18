@@ -70,8 +70,8 @@ const LaborDescr labor_text[] = {
   { "Fish Cleaning", "Fisherdwarf", 1 },
   { "Hunting", "Trapper", 1 },
   { "Furnace Operating", "Metalsmith", 1 },
-  { "Adamantine Extraction", "Peasant", 20 },
-  { "Adamantine Working", "Peasant", 20 },
+  { "Adam Extraction", "Adamantine", 20 },
+  { "Adam Working", "Adamantine", 20 },
   { "Metalsmithing", "Metalsmith", 0 },
   { "Jeweling", "Jeweler", 5 },
   { "Craftsworking", "Craftsdwarf", 3 },
@@ -107,6 +107,10 @@ struct Color {
   Color() { };
   Color(unsigned char r, unsigned char g, unsigned char b) : r(r), g(g), b(b) { };
 };
+
+inline bool operator!=(const Color &lhs, const Color &rhs) {
+  return !(lhs.r == rhs.r && lhs.g == rhs.g && lhs.b == rhs.b);
+}
 
 class Db {
   map<int, int> outmap;

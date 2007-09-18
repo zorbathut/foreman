@@ -35,7 +35,7 @@ I can be contacted at zorba-foreman@pavlovian.net
 
 using namespace std;
 
-const string foremanname =  "Dwarf Foreman 0.1.2 beta";
+const string foremanname =  "Dwarf Foreman 0.1.3 beta";
 
 /*************
  * ForemanGrid
@@ -74,7 +74,7 @@ int xsz = 16;
 int ysz = 16;
 
 int xborder = 50;
-int yborder = 80;
+int yborder = 88;
 
 void ForemanGrid::OnPaint(wxPaintEvent& event) {
   wxPaintDC dc(this);
@@ -91,21 +91,47 @@ void ForemanGrid::OnPaint(wxPaintEvent& event) {
   
   dc.SetPen(*wxTRANSPARENT_PEN);
   
-  for(int m = 0; m < 3; m++) {
-    if(m == C_NO)
-      dc.SetBrush(*wxTheBrushList->FindOrCreateBrush(wxColour(60, 60, 60)));
-    else if(m == C_YES)
-      dc.SetBrush(*wxGREEN_BRUSH);
-    else if(m == C_MU)
-      dc.SetBrush(*wxGREY_BRUSH);
-    else
-      CHECK(0);
-    
-    for(int i = 0; i < dat.size(); i++) {
-      for(int j = 0; j < dat[i].second.size(); j++) {
-        if(dat[i].second[j] == m) {
-          dc.DrawRectangle(xborder + xsz * j, yborder + ysz * i, xsz, ysz);
+  {
+    int segments = 0;
+    int start = 0;
+    for(int i = 0; i < names.size(); i++) {
+      if(i && names[i].second != names[i-1].second) {
+        dc.SetBrush(*wxTheBrushList->FindOrCreateBrush(wxColour(names[i - 1].second.r, names[i - 1].second.g, names[i - 1].second.b)));
+        dc.DrawRectangle(xborder + xsz * (start + segments), yborder - 8, xsz * (i - start + 1), ysz * (dat.size() + 1));
+        start = i;
+        segments++;
+      }
+    }
+    dc.SetBrush(*wxTheBrushList->FindOrCreateBrush(wxColour(names.back().second.r, names.back().second.g, names.back().second.b)));
+    dc.DrawRectangle(xborder + xsz * (start + segments), yborder - 8, xsz * (names.size() - start + 1), ysz * (dat.size() + 1));
+  }
+  
+  if(dat.size()) {
+    for(int m = 0; m < 3; m++) {
+      if(m == C_NO)
+        dc.SetBrush(*wxTheBrushList->FindOrCreateBrush(wxColour(60, 60, 60)));
+      else if(m == C_YES)
+        dc.SetBrush(*wxGREEN_BRUSH);
+      else if(m == C_MU)
+        dc.SetBrush(*wxGREY_BRUSH);
+      else
+        CHECK(0);
+      
+      int segments = 0;
+      for(int j = 0; j < dat[0].second.size(); j++) {
+        if(j && names[j].second != names[j-1].second)
+          segments++;
+        
+        for(int i = 0; i < dat.size(); i++) {
+          if(dat[i].second[j] == m) {
+            dc.DrawRectangle(int(xborder + xsz * (j + segments + 0.5)), yborder + ysz * i, xsz, ysz);
+          }
         }
+        
+        wxCoord w;
+        wxCoord h;
+        dc.GetTextExtent(names[j].first, &w, &h);
+        dc.DrawRotatedText(names[j].first, (int)(xborder + xsz * (j + segments + 0.5) - w * 0.68 + xsz), (int)(yborder - w * 0.68 - 15 - 8), -45);
       }
     }
   }
@@ -120,21 +146,27 @@ void ForemanGrid::OnPaint(wxPaintEvent& event) {
   
   dc.SetPen(*wxBLACK_PEN);
   
-  for(int i = 3; i < names.size(); i += 3)
-    dc.DrawLine(xborder + xsz * i, yborder - 5, xborder + xsz * i, 10000);
+  {
+    int left = 0;
+    int segments = 0;
+    for(int i = 0; i < names.size(); i++) {
+      if(i && names[i].second != names[i-1].second) {
+        segments++;
+        left = 0;
+      }
+      if(left == 3) {
+        dc.DrawLine(int(xborder + xsz * (i + segments + 0.5)), yborder - 5, int(xborder + xsz * (i + segments + 0.5)), 10000);
+        left = 0;
+      }
+      left++;
+    }
+  }
   
   for(int i = 3; i < dat.size(); i += 3)
     dc.DrawLine(0, yborder + ysz * i, 10000, yborder + ysz * i);
   
   for(int i = 0; i < dat.size(); i++)
     dc.DrawText(dat[i].first, 0, yborder + ysz * i);
-  
-  for(int i = 0; i < names.size(); i++) {
-    wxCoord w;
-    wxCoord h;
-    dc.GetTextExtent(names[i].first, &w, &h);
-    dc.DrawRotatedText(names[i].first, (int)(xborder + xsz * i - w * 0.68 + xsz), (int)(yborder - w * 0.68 - 15), -45);
-  }
 }
 
 inline int findname(const vector<pair<string, Color> > &names, const string &name) {
@@ -154,8 +186,23 @@ void ForemanGrid::OnMouse(wxMouseEvent &event) {
   x -= xborder;
   y -= yborder;
   
+  x -= xsz / 2;
+  
   x /= xsz;
   y /= ysz;
+  
+  int ox = x;
+  int oy = y;
+  
+  for(int i = 0; i <= x; i++) {
+    if(i >= names.size())
+      return;
+    if(i && names[i].second != names[i-1].second) {
+      x--;
+      if(x < i)
+        return;
+    }
+  }
   
   if(y >= 0 && y < dat.size() && x >= 0 && x < dat[0].second.size()) {
     vector<pair<string, vector<Change> > > dt = clicky->Run(make_pair(x, y));
@@ -166,10 +213,10 @@ void ForemanGrid::OnMouse(wxMouseEvent &event) {
       int b = findname(names, "Mining");
       if(a > b)
         swap(a, b);
-      RefreshRect(wxRect(xborder + xsz * a, yborder + ysz * y, (b - a + 1) * xsz, ysz));
+      RefreshRect(wxRect(xborder + xsz * a, yborder + ysz * y, (b - a + 3) * xsz, ysz));
       // whee hack
     } else {
-      RefreshRect(wxRect(xborder + xsz * x, yborder + ysz * y, xsz, ysz));
+      RefreshRect(wxRect(xborder + xsz * ox + xsz / 2, yborder + ysz * oy, xsz, ysz));
     }
   }
 }
