@@ -1,6 +1,7 @@
-- Make scroll work
+- add a version check and also a check to make sure it's actually dwarf fortress
+- detect dwarves a bit better to deal with mods
+- split unnamed based on professions
 - Add legend
 - Highlight squares the mouse moves over
 - Include dwarf count, legendary count, idle count
-- Remove warnings
-
+- Add priority system

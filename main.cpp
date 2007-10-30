@@ -35,7 +35,7 @@ I can be contacted at zorba-foreman@pavlovian.net
 
 using namespace std;
 
-const string foremanname =  "Dwarf Foreman 0.1.3 beta";
+const string foremanname =  "Dwarf Foreman 0.2.1.lol beta";
 
 /*************
  * ForemanGrid
@@ -234,7 +234,7 @@ void ForemanGrid::OnMouse(wxMouseEvent &event) {
       int b = findname(names, "Mining");
       if(a > b)
         swap(a, b);
-      ScrolledRR(wxRect(xborder + xsz * a, yborder + ysz * y, (b - a + 3) * xsz, ysz));
+      ScrolledRR(wxRect(xborder + xsz * a, yborder + ysz * y, (b - a + 4) * xsz, ysz));
       // whee hack
     } else {
       ScrolledRR(wxRect(xborder + xsz * ox + xsz / 2, yborder + ysz * oy, xsz, ysz));

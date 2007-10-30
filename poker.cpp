@@ -96,12 +96,34 @@ bool isLivingDwarf(HANDLE handle, DWORD address) {
 
 const DWORD critter_start = 0x00ACB3EC;
 
+string getProf(HANDLE handle, DWORD addr) {
+  string lt = getMemoryLT(handle, addr + 0x60);
+  if(lt.size())
+    return lt;
+  
+  int type = getMemoryDW(handle, addr + 0x70);
+  if(type == 0x00) return "(Miner)";
+  if(type == 0x01) return "(Carpenter)";
+  if(type == 0x02) return "(Mason)";
+  if(type == 0x03) return "(Trapper)";
+  if(type == 0x04) return "(Metalsmith)";
+  if(type == 0x05) return "(Jeweler)";
+  if(type == 0x06) return "(Craftsdwarf)";
+  if(type == 0x09) return "(Fisherdwarf)";
+  if(type == 0x0A) return "(Farmer)";
+  if(type == 0x0B) return "(Mechanic)";
+  if(type == 0x52) return "(Peasant)";
+  return "(unnamed)";
+}
+
 vector<pair<string, DwarfInfo> > GameLock::get() const {
   DWORD start = getMemoryDW(handle, critter_start);
   DWORD end = getMemoryDW(handle, critter_start + 4);
+  dprintf("SE is %08x %08x\n", (unsigned int)start, (unsigned int)end);
+  CHECK(end >= start);
+  CHECK((end - start) % 4 == 0);
   CHECK(start % 4 == 0);
   CHECK(end % 4 == 0);
-  dprintf("SE is %08x %08x\n", (unsigned int)start, (unsigned int)end);
   DWORD count = (end - start) / 4;
   
   vector<pair<string, DwarfInfo> > rv;
@@ -113,13 +135,13 @@ vector<pair<string, DwarfInfo> > GameLock::get() const {
     if(!isLivingDwarf(handle, addr))
       continue;
     
-    string prof = getMemoryLT(handle, addr + 0x60);
+    string prof = getProf(handle, addr);
     
     //dprintf("Dwarfish: %08x %s is %d\n", addr, prof.c_str(), getMemoryDW(handle, addr + 0x78));
     
     DwarfInfo info;
     for(int i = 0; i < ARRAY_SIZE(info.jobs); i++) {
-      if(labor_text[i].descr[0] == '(') {
+      if(labor_text[i].descr == "(unknown)") {
         info.jobs[i] = C_MU;
       } else {
         char kar = getMemoryChar(handle, addr + 0x460 + i);
@@ -137,9 +159,11 @@ vector<pair<string, DwarfInfo> > GameLock::get() const {
 void GameLock::set(const vector<pair<string, DwarfInfo> > &sinf) {
   DWORD start = getMemoryDW(handle, critter_start);
   DWORD end = getMemoryDW(handle, critter_start + 4);
+  dprintf("SE is %08x %08x\n", (unsigned int)start, (unsigned int)end);
+  CHECK(end >= start);
+  CHECK((end - start) % 4 == 0);
   CHECK(start % 4 == 0);
   CHECK(end % 4 == 0);
-  dprintf("SE is %08x %08x\n", (unsigned int)start, (unsigned int)end);
   DWORD count = (end - start) / 4;
   
   vector<pair<string, DwarfInfo> > rv;
@@ -155,7 +179,7 @@ void GameLock::set(const vector<pair<string, DwarfInfo> > &sinf) {
     //string firstname = getMemoryLT(handle, addr);
     //string lastname = getMemoryLT(handle, addr + 16);
     
-    string prof = getMemoryLT(handle, addr + 0x60);
+    string prof = getProf(handle, addr);
     
     CHECK(sinf[cn].first == prof);
     
@@ -174,6 +198,8 @@ void GameLock::set(const vector<pair<string, DwarfInfo> > &sinf) {
 
 void SuspendProcess(DWORD pid, bool suspend) { 
   HANDLE snapshot;
+  
+  dprintf("Switching %d %d\n", (int)pid, suspend);
 
   snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPTHREAD, 0); 
   CHECK(snapshot != INVALID_HANDLE_VALUE);
@@ -186,7 +212,15 @@ void SuspendProcess(DWORD pid, bool suspend) {
   do { 
     if(thread.th32OwnerProcessID == pid) {
       HANDLE tt = OpenThread(THREAD_SUSPEND_RESUME, FALSE, thread.th32ThreadID);
-      dprintf("Found thread %p\n", tt);
+      dprintf("Found thread %d, opened with handle %d\n", (int)thread.th32ThreadID, (int)tt);
+      if(tt == 0) {
+        DWORD gle = GetLastError();
+        LPVOID lpMsgBuf;
+        FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, NULL, gle, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPTSTR) &lpMsgBuf, 0, NULL );
+        dprintf("Failed to open thread - error %d, message %s\n", (int)gle, (char*)lpMsgBuf);
+        LocalFree(lpMsgBuf);
+        CHECK(0);
+      }
       if(suspend) {
         SuspendThread(tt);
       } else {
@@ -197,6 +231,8 @@ void SuspendProcess(DWORD pid, bool suspend) {
   } while(Thread32Next(snapshot, &thread));
   
   CloseHandle(snapshot); 
+  
+  dprintf("Done switching\n");
 }
 
 DWORD crash_pid = 0;

@@ -53,7 +53,7 @@ const Color color_col[] = {
   Color(0, 255, 0),
   Color(0, 0, 255),
   Color(127, 127, 0),
-  Color(127, 0, 0),
+  Color(0, 0, 127),
   Color(255, 0, 0),
   Color(0, 127, 127),
   Color(0, 255, 255),
