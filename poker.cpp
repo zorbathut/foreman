@@ -234,14 +234,23 @@ void GameLock::set(const vector<pair<string, DwarfInfo> > &sinf) {
 };
 
 bool GameLock::confirm() {
-  char bf[4];
+  const DWORD beg = 0x00400000;
+  const DWORD end = 0x00401000;
+  vector<char> kod(end - beg);
   bool failed;
-  getMemoryFailable(handle, 0x031289A9, bf, sizeof(bf), &failed);
+  getMemoryFailable(handle, beg, &kod[0], end - beg, &failed);
   if(failed)
     return false;
-  if(memcmp(bf, ".33a", sizeof(bf)) == 0)
-    return true;
-  return false;
+  DWORD facu = 0;
+  DWORD acu = 1;
+  for(int i = 0; i < kod.size(); i++) {
+    facu = facu + acu;
+    acu = acu + kod[i];
+  }
+  const DWORD check = 0x007d1b6a;
+  if(facu != check)
+    dprintf("is %08x vs %08x\n", check, facu);
+  return facu == check;
 }
 
 void SuspendProcess(DWORD pid, bool suspend) { 
