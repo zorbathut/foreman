@@ -96,7 +96,8 @@ string getMemoryString(HANDLE handle, DWORD address) {
 
 bool isLivingDwarf(HANDLE handle, DWORD address) {
 
-  /*
+  /*dprintf("%s the '%s': %08x, %08x\n", getMemoryString(handle, address + 4).c_str(), getMemoryString(handle, address + 0x70).c_str(), (int)getMemoryDW(handle, address + 0xa0), (int)getMemoryDW(handle, address + 0xa4));
+  
   for(int i = 0; i < 20; i++)  {
     char blorb = getMemoryChar(handle, address + 0xe0 - 8 + i);
     for(int j = 0; j < 8; j++) {
@@ -107,9 +108,7 @@ bool isLivingDwarf(HANDLE handle, DWORD address) {
   
   //dprintf("%s the '%s': %d %d flags, %08x address, %08x %08x type\n", getMemoryString(handle, address + 4).c_str(), getMemoryString(handle, address + 0x70).c_str(), (int)getMemoryDW(handle, address + 0xe4) & (1 << 1), (int)getMemoryDW(handle, address + 0xe8) & (1 << 7), (unsigned long)address, getMemorySW(handle, address + 0x88), getMemorySW(handle, address + 0x8a));
   
-  CHECK(!(getMemoryDW(handle, address + 0xE4) & (1 << 1)) == !(getMemoryDW(handle, address + 0xE8) & (1 << 7)));
-  
-  if(getMemoryDW(handle, address + 0xE4) & (1 << 1))
+  if(getMemoryDW(handle, address + 0xE8) & (1 << 7))
     return false;
   
   string prof = getMemoryString(handle, address + 0x70);
@@ -118,6 +117,8 @@ bool isLivingDwarf(HANDLE handle, DWORD address) {
   
   if(getMemorySW(handle, address + 0x8c) != 0xa6)
     return false;
+  
+  //dprintf("%s the '%s': %08x\n", getMemoryString(handle, address + 4).c_str(), getMemoryString(handle, address + 0x70).c_str(), (int)getMemoryDW(handle, address + 0xa0));
   
   return true;
 }
@@ -135,8 +136,10 @@ string getProf(HANDLE handle, DWORD addr) {
   if(type == 0x01) return "(Woodworker)";
   if(type == 0x02) return "(Carpenter)";
   if(type == 0x04) return "(Woodcutter)";
+  if(type == 0x06) return "(Engraver)";
   if(type == 0x07) return "(Mason)";
   if(type == 0x08) return "(Ranger)";
+  if(type == 0x09) return "(Animal Caretaker)";
   if(type == 0x0a) return "(Animal Trainer)";
   if(type == 0x0b) return "(Hunter)";
   if(type == 0x0c) return "(Trapper)";
@@ -146,19 +149,26 @@ string getProf(HANDLE handle, DWORD addr) {
   if(type == 0x11) return "(Armorer)";
   if(type == 0x13) return "(Metalcrafter)";
   if(type == 0x14) return "(Jeweler)";
+  if(type == 0x15) return "(Gem Cutter)";
   if(type == 0x16) return "(Gem Setter)";
+  if(type == 0x17) return "(Craftsdwarf)";
   if(type == 0x18) return "(Woodcrafter)";
   if(type == 0x19) return "(Stonecrafter)";
   if(type == 0x1a) return "(Leatherworker)";
   if(type == 0x1b) return "(Bone Carver)";
+  if(type == 0x1c) return "(Weaver)";
   if(type == 0x1d) return "(Clothier)";
   if(type == 0x1e) return "(Glassmaker)";
+  if(type == 0x22) return "(Fishery Worker)";
   if(type == 0x23) return "(Fisherdwarf)";
   if(type == 0x24) return "(Fish Dissector)";
   if(type == 0x26) return "(Farmer)";
+  if(type == 0x28) return "(Milker)";
   if(type == 0x29) return "(Cook)";
+  if(type == 0x2a) return "(Thresher)";
   if(type == 0x2c) return "(Butcher)";
   if(type == 0x2d) return "(Tanner)";
+  if(type == 0x2e) return "(Dyer)";
   if(type == 0x2f) return "(Planter)";
   if(type == 0x30) return "(Herbalist)";
   if(type == 0x31) return "(Brewer)";
@@ -169,8 +179,9 @@ string getProf(HANDLE handle, DWORD addr) {
   if(type == 0x37) return "(Mechanic)";
   if(type == 0x3b) return "(Clerk)";
   if(type == 0x3e) return "(Architect)";
-  if(type == 0x59) return "(Wrestler)";
-  if(type == 0x67) return "(Recruit)";
+  if(type == 0x59) return "(wrestler)";
+  if(type == 0x5b) return "(axedwarf)";
+  if(type == 0x67) return "(recruit)";
   if(type == 0x6c) return "(Peasant)";
   dprintf("Unknown profession! The dwarf with a first name of %s has profession %02x. Please look up whatever profession that is, then email it to zorba@pavlovian.net so he can get all this together without destroying his brain.", getMemoryString(handle, addr + 0x04).c_str(), (int)type);
   return "(Unknown)";
@@ -215,7 +226,7 @@ vector<pair<string, DwarfInfo> > GameLock::get() const {
   
   /*
   for(int i = 0; i < bitses.size(); i++)
-    if(bitses[i] == 2)
+    if(bitses[i] == 7)
       dprintf("Possible: %d\n", i);
     CHECK(0);*/
 
@@ -298,7 +309,7 @@ void SuspendProcess(DWORD pid, bool suspend) {
   do { 
     if(thread.th32OwnerProcessID == pid) {
       HANDLE tt = OpenThread(THREAD_SUSPEND_RESUME, FALSE, thread.th32ThreadID);
-      dprintf("Found thread %d, opened with handle %d\n", (int)thread.th32ThreadID, (int)tt);
+      //dprintf("Found thread %d, opened with handle %d\n", (int)thread.th32ThreadID, (int)tt);
       if(tt == 0) {
         DWORD gle = GetLastError();
         LPVOID lpMsgBuf;
