@@ -24,6 +24,7 @@ I can be contacted at zorba-foreman@pavlovian.net
 #include "db.h"
 
 #include <tlhelp32.h>
+#include <psapi.h>
 
 void getMemory(HANDLE handle, DWORD address, void *target, int bytes) {
   DWORD obytes = 0xffffffff;
@@ -143,22 +144,33 @@ string getProf(HANDLE handle, DWORD addr) {
   if(type == 0x0f) return "(Furnace Operator)";
   if(type == 0x10) return "(Weaponsmith)";
   if(type == 0x11) return "(Armorer)";
+  if(type == 0x13) return "(Metalcrafter)";
+  if(type == 0x14) return "(Jeweler)";
   if(type == 0x16) return "(Gem Setter)";
   if(type == 0x18) return "(Woodcrafter)";
+  if(type == 0x19) return "(Stonecrafter)";
   if(type == 0x1a) return "(Leatherworker)";
   if(type == 0x1b) return "(Bone Carver)";
+  if(type == 0x1d) return "(Clothier)";
   if(type == 0x1e) return "(Glassmaker)";
   if(type == 0x23) return "(Fisherdwarf)";
   if(type == 0x24) return "(Fish Dissector)";
   if(type == 0x26) return "(Farmer)";
   if(type == 0x29) return "(Cook)";
   if(type == 0x2c) return "(Butcher)";
+  if(type == 0x2d) return "(Tanner)";
   if(type == 0x2f) return "(Planter)";
+  if(type == 0x30) return "(Herbalist)";
   if(type == 0x31) return "(Brewer)";
   if(type == 0x32) return "(Soap Maker)";
   if(type == 0x34) return "(Lye Maker)";
+  if(type == 0x35) return "(Wood Burner)";
+  if(type == 0x36) return "(Engineer)";
   if(type == 0x37) return "(Mechanic)";
+  if(type == 0x3b) return "(Clerk)";
   if(type == 0x3e) return "(Architect)";
+  if(type == 0x59) return "(Wrestler)";
+  if(type == 0x67) return "(Recruit)";
   if(type == 0x6c) return "(Peasant)";
   dprintf("Unknown profession! The dwarf with a first name of %s has profession %02x. Please look up whatever profession that is, then email it to zorba@pavlovian.net so he can get all this together without destroying his brain.", getMemoryString(handle, addr + 0x04).c_str(), (int)type);
   return "(Unknown)";
@@ -330,24 +342,48 @@ GameLock::~GameLock() {
 smart_ptr<GameLock> GameHandle::lockGame() {
   smart_ptr<GameLock> pt = smart_ptr<GameLock>(new GameLock(handle, pid));
   if(!pt->confirm()) {
-    MessageBox(NULL, "I'm not sure this is the right version of Dwarf Fortress. Check the Dwarf Foreman titlebar - you need to have that version, otherwise this won't work!\r\n\r\nAlso, if you have any other windows named \"Dwarf Fortress\", you should close them. Don't ask.", "Error", MB_OK | MB_ICONERROR);
+    MessageBox(NULL, "I'm not sure this is the right version of Dwarf Fortress. Check the Dwarf Foreman titlebar - you need to have that version, otherwise this won't work!\r\n\r\nAlso, if you have any other windows named \"Dwarf Fortress\", you should close them. Don't ask. I'll fix it later.", "Error", MB_OK | MB_ICONERROR);
     return smart_ptr<GameLock>(NULL);
   }
   return pt;
 }
 
+// I AM TIRED OF THIS
+// also: poker.cpp:373: error: invalid conversion from `BOOL (*)(HWND__*, LPARAM)' to `BOOL (*)(HWND__*, LPARAM)'
+// I felt I had to immortalize that error somewhere.
+HWND realwnd = 0;
+BOOL CALLBACK enumcallback(HWND wnd, LPARAM lol) {
+  DWORD pid;
+  GetWindowThreadProcessId(wnd, &pid);
+  HANDLE rv = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
+  if(rv != NULL) {
+    char filename[128];
+    GetModuleFileNameEx(rv, NULL, filename, sizeof(filename));
+    CloseHandle(rv);
+    if(strstr(filename, "dwarfort.exe")) {
+      realwnd = wnd;
+      return FALSE;
+    }
+  }
+  return TRUE;
+}
+
 smart_ptr<GameHandle> getGameHandle() {
   HANDLE rv;
-  
-  HWND wnd;
   DWORD pid;
   
-  wnd = FindWindow(NULL, "Dwarf Fortress");
-  dprintf("%p\n", wnd);
-  GetWindowThreadProcessId(wnd, &pid);
+  EnumWindows(enumcallback, 0);
+  
+  if(realwnd == 0)
+    return smart_ptr<GameHandle>();
+  
+  GetWindowThreadProcessId(realwnd, &pid);
   dprintf("%08x\n", (unsigned int)pid);
   rv = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
   dprintf("%p\n", rv);
+  char filename[128];
+  GetModuleFileNameEx(rv, NULL, filename, sizeof(filename));
+  dprintf("Found process is %s\n", filename);
   
   if(rv == NULL)
     return smart_ptr<GameHandle>();

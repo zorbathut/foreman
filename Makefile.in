@@ -4,7 +4,7 @@ STDLDFLAGS := @STDLDFLAGS@ -g
 
 FOREMANSOURCES := main debug parse util os poker db
 FOREMANCXXFLAGS := `@WX@ --cxxflags` $(STDCXXFLAGS)
-FOREMANLDFLAGS := `@WX@ --libs --gl-libs` $(STDLDFLAGS)
+FOREMANLDFLAGS := `@WX@ --libs --gl-libs` $(STDLDFLAGS) -lpsapi
 
 FUNCTORSOURCES := functor_gen debug parse util os
 CONSOLECXXFLAGS := $(STDCXXFLAGS) -O0
