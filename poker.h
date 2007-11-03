@@ -33,7 +33,7 @@ I can be contacted at zorba-foreman@pavlovian.net
 enum Change { C_NO, C_YES, C_MU };
 
 struct DwarfInfo {
-  Change jobs[64];
+  Change jobs[102];
   
   DwarfInfo() {
     for(int i = 0; i < ARRAY_SIZE(jobs); i++)
@@ -46,6 +46,8 @@ class GameLock {
   DWORD pid;
   
 public:
+  
+  bool confirm();
   
   vector<pair<string, DwarfInfo> > get() const;
   

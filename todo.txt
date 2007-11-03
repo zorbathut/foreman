@@ -1,3 +1,4 @@
+- Fix the axe/mining/carpenting thing
 - add a version check and also a check to make sure it's actually dwarf fortress
 - detect dwarves a bit better to deal with mods
 - split unnamed based on professions

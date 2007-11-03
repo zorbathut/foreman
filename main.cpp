@@ -35,7 +35,7 @@ I can be contacted at zorba-foreman@pavlovian.net
 
 using namespace std;
 
-const string foremanname =  "Dwarf Foreman 0.2.1.lol beta";
+const string foremanname =  "Dwarf Foreman 0.3.0 (v0.27.169.33a compatible)";
 
 /*************
  * ForemanGrid
@@ -420,41 +420,6 @@ bool ForemanMain::OnInit() {
   wxFrame *frame = new ForemanWindow();
   frame->Show(true);
   SetTopWindow(frame);
-  
-  /*
-  smart_ptr<GameHandle> gh = getGameHandle();
-  CHECK(gh.get());
-  dprintf("Got game handle\n");
-  
-  {
-    smart_ptr<GameLock> gl = gh->lockGame();
-    
-    vector<pair<string, DwarfInfo> > gt = gl->get();
-    for(int i = 0; i < gt.size(); i++) {
-      string foo = StringPrintf("name: \"%s\"  joblist: ", gt[i].first.c_str());
-      for(int j = 0; j < ARRAY_SIZE(gt[i].second.jobs); j++)
-        foo += StringPrintf("%d", gt[i].second.jobs[j]);
-      dprintf("%s\n", foo.c_str());
-    }
-    
-    for(int i = 0; i < gt.size(); i++) {
-      for(int j = 0; j < ARRAY_SIZE(gt[i].second.jobs); j++)
-        gt[i].second.jobs[j] = C_MU;
-      gt[i].second.jobs[0xC] = C_YES;
-    }
-    
-    gl->set(gt);
-    
-    gt = gl->get();
-    for(int i = 0; i < gt.size(); i++) {
-      string foo = StringPrintf("name: \"%s\"  joblist: ", gt[i].first.c_str());
-      for(int j = 0; j < ARRAY_SIZE(gt[i].second.jobs); j++) {
-        foo += StringPrintf("%d", gt[i].second.jobs[j]);
-        CHECK(gt[i].second.jobs[0xC] == C_YES);
-      }
-      dprintf("%s\n", foo.c_str());
-    }
-  }*/
   
   return true;
 }

@@ -67,7 +67,7 @@ vector<pair<string, vector<Change> > > Db::scan(GameHandle *handle) {
     set<string> cname(color_text, color_text + ARRAY_SIZE(color_text));
     CHECK(cname.size() == ARRAY_SIZE(color_text));
     for(int i = 0; i < ARRAY_SIZE(labor_text); i++)
-      CHECK(labor_text[i].descr == "(unknown)" && labor_text[i].type == "" || cname.count(labor_text[i].type));
+      CHECK(labor_text[i].descr[0] == '(' && labor_text[i].type == "" || cname.count(labor_text[i].type));
   }
   
   dinf.clear();
@@ -179,22 +179,13 @@ vector<pair<string, vector<Change> > > Db::click(int x, int y, GameHandle *handl
         
         if(names[x].first == "Wood Cutting" && it->second.jobs[inmap[x]] == C_YES) {
           // disable all weapons, enable axe
-          dat[i].second.jobs[0x29] = C_YES;
-          dat[i].second.jobs[0x2a] = C_NO;
-          dat[i].second.jobs[0x2b] = C_NO;
-          dat[i].second.jobs[0x2c] = C_NO;
-          dat[i].second.jobs[0x2d] = C_NO;
-          dat[i].second.jobs[0x2e] = C_NO;
-          dat[i].second.jobs[0x2f] = C_NO;
+          for(int k = findname(names, "(axe)"); k <= findname(names, "(whip)"); k++)
+            dat[i].second.jobs[k] = C_NO;
+          dat[i].second.jobs[findname(names, "(axe)")] = C_YES;
         } else if(names[x].first == "Mining" && it->second.jobs[inmap[x]] == C_YES) {
           // disable all weapons
-          dat[i].second.jobs[0x29] = C_NO;
-          dat[i].second.jobs[0x2a] = C_NO;
-          dat[i].second.jobs[0x2b] = C_NO;
-          dat[i].second.jobs[0x2c] = C_NO;
-          dat[i].second.jobs[0x2d] = C_NO;
-          dat[i].second.jobs[0x2e] = C_NO;
-          dat[i].second.jobs[0x2f] = C_NO;
+          for(int i = findname(names, "(axe)"); i <= findname(names, "(whip)"); i++)
+            dat[i].second.jobs[i] = C_NO;
         }
       }
     }
@@ -220,7 +211,7 @@ vector<pair<string, vector<Change> > > Db::dump() const {
 Db::Db() {
   vector<pair<int, pair<int, int> > > sorty;
   for(int i = 0; i < ARRAY_SIZE(labor_text); i++)
-    if(labor_text[i].descr != "(unknown)")
+    if(labor_text[i].descr[0] != '(')
       sorty.push_back(make_pair(distance(color_text, find(color_text, color_text + ARRAY_SIZE(color_text), labor_text[i].type)), make_pair(labor_text[i].priority, i)));
   
   sort(sorty.begin(), sorty.end());
