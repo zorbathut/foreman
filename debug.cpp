@@ -27,6 +27,7 @@ I can be contacted at zorba-foreman@pavlovian.net
 #include <assert.h>
 
 #include <vector>
+#include <fstream>
 
 using namespace std;
 
@@ -148,6 +149,13 @@ int dprintf(const char *bort, ...) {
   //assert(done < (int)buf.size());
 
   outputDebugString(&(buf[0]));
+  
+  {
+    ofstream ofs("debug.txt", ios::app);
+    ofs << &buf[0];
+    if(buf[strlen(&buf[0]) - 1] != '\n')
+      ofs << endl;
+  }
 
   CHECK(inthread);
   inthread = false;

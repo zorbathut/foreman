@@ -109,6 +109,15 @@ inline int findname(const vector<pair<string, Color> > &names, const string &nam
   for(int i = 0; i < names.size(); i++)
     if(names[i].first == name)
       return i;
+  dprintf("Couldn't find name %s\n", name.c_str());
+  CHECK(0);
+}
+
+inline int findbasename(const string &name) {
+  for(int i = 0; i < ARRAY_SIZE(labor_text); i++)
+    if(labor_text[i].descr == name)
+      return i;
+  dprintf("Couldn't find name %s\n", name.c_str());
   CHECK(0);
 }
 
@@ -125,22 +134,13 @@ void Db::full_write(GameHandle *handle) {
       
       if(dinf[dat[i].first].jobs[inmap[findname(names, "Wood Cutting")]] == C_YES) {
         // disable all weapons, enable axe
-        dat[i].second.jobs[0x29] = C_YES;
-        dat[i].second.jobs[0x2a] = C_NO;
-        dat[i].second.jobs[0x2b] = C_NO;
-        dat[i].second.jobs[0x2c] = C_NO;
-        dat[i].second.jobs[0x2d] = C_NO;
-        dat[i].second.jobs[0x2e] = C_NO;
-        dat[i].second.jobs[0x2f] = C_NO;
+          for(int k = findbasename("(axe)"); k <= findbasename("(whip)"); k++)
+            dat[i].second.jobs[k] = C_NO;
+          dat[i].second.jobs[findbasename("(axe)")] = C_YES;
       } else if(dinf[dat[i].first].jobs[inmap[findname(names, "Wood Cutting")]] == C_YES) {
-        // disable all weapons
-        dat[i].second.jobs[0x29] = C_NO;
-        dat[i].second.jobs[0x2a] = C_NO;
-        dat[i].second.jobs[0x2b] = C_NO;
-        dat[i].second.jobs[0x2c] = C_NO;
-        dat[i].second.jobs[0x2d] = C_NO;
-        dat[i].second.jobs[0x2e] = C_NO;
-        dat[i].second.jobs[0x2f] = C_NO;
+          // disable all weapons
+          for(int k = findbasename("(axe)"); k <= findbasename("(whip)"); k++)
+            dat[i].second.jobs[k] = C_NO;
       }
     }
   }
@@ -179,13 +179,13 @@ vector<pair<string, vector<Change> > > Db::click(int x, int y, GameHandle *handl
         
         if(names[x].first == "Wood Cutting" && it->second.jobs[inmap[x]] == C_YES) {
           // disable all weapons, enable axe
-          for(int k = findname(names, "(axe)"); k <= findname(names, "(whip)"); k++)
+          for(int k = findbasename("(axe)"); k <= findbasename("(whip)"); k++)
             dat[i].second.jobs[k] = C_NO;
-          dat[i].second.jobs[findname(names, "(axe)")] = C_YES;
+          dat[i].second.jobs[findbasename("(axe)")] = C_YES;
         } else if(names[x].first == "Mining" && it->second.jobs[inmap[x]] == C_YES) {
           // disable all weapons
-          for(int i = findname(names, "(axe)"); i <= findname(names, "(whip)"); i++)
-            dat[i].second.jobs[i] = C_NO;
+          for(int k = findbasename("(axe)"); k <= findbasename("(whip)"); k++)
+            dat[i].second.jobs[k] = C_NO;
         }
       }
     }

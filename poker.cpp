@@ -104,18 +104,18 @@ bool isLivingDwarf(HANDLE handle, DWORD address) {
     }
   }*/
   
-  //dprintf("%s: %d %d flags, %08x address\n", getMemoryString(handle, address + 4).c_str(), (int)getMemoryDW(handle, address + 0xe4) & (1 << 1), (int)getMemoryDW(handle, address + 0xe8) & (1 << 7), (unsigned long)address);
+  //dprintf("%s the '%s': %d %d flags, %08x address, %08x %08x type\n", getMemoryString(handle, address + 4).c_str(), getMemoryString(handle, address + 0x70).c_str(), (int)getMemoryDW(handle, address + 0xe4) & (1 << 1), (int)getMemoryDW(handle, address + 0xe8) & (1 << 7), (unsigned long)address, getMemorySW(handle, address + 0x88), getMemorySW(handle, address + 0x8a));
   
-  CHECK((getMemoryDW(handle, address + 0xE4) & (1 << 1)) == (getMemoryDW(handle, address + 0xE8) & (1 << 7)));
+  CHECK(!(getMemoryDW(handle, address + 0xE4) & (1 << 1)) == !(getMemoryDW(handle, address + 0xE8) & (1 << 7)));
   
   if(getMemoryDW(handle, address + 0xE4) & (1 << 1))
     return false;
   
   string prof = getMemoryString(handle, address + 0x70);
   
-  CHECK(!prof.size() || getMemorySW(handle, address + 0x88) != 0x6c); // if a creature has a profession, something weird has happened
+  CHECK(!prof.size() || getMemorySW(handle, address + 0x8c) == 0xa6); // if a creature has a profession, something weird has happened
   
-  if(getMemorySW(handle, address + 0x88) == 0x6c)
+  if(getMemorySW(handle, address + 0x8c) != 0xa6)
     return false;
   
   return true;
@@ -129,22 +129,39 @@ string getProf(HANDLE handle, DWORD addr) {
   if(lt.size())
     return lt;
   
-  return "(unnamed)";
-  
-  /*
-  int type = getMemoryDW(handle, addr + 0x70);
+  int type = getMemorySW(handle, addr + 0x88);
   if(type == 0x00) return "(Miner)";
-  if(type == 0x01) return "(Carpenter)";
-  if(type == 0x02) return "(Mason)";
-  if(type == 0x03) return "(Trapper)";
-  if(type == 0x04) return "(Metalsmith)";
-  if(type == 0x05) return "(Jeweler)";
-  if(type == 0x06) return "(Craftsdwarf)";
-  if(type == 0x09) return "(Fisherdwarf)";
-  if(type == 0x0A) return "(Farmer)";
-  if(type == 0x0B) return "(Mechanic)";
-  if(type == 0x52) return "(Peasant)";
-  return "(unnamed)";*/
+  if(type == 0x01) return "(Woodworker)";
+  if(type == 0x02) return "(Carpenter)";
+  if(type == 0x04) return "(Woodcutter)";
+  if(type == 0x07) return "(Mason)";
+  if(type == 0x08) return "(Ranger)";
+  if(type == 0x0a) return "(Animal Trainer)";
+  if(type == 0x0b) return "(Hunter)";
+  if(type == 0x0c) return "(Trapper)";
+  if(type == 0x0e) return "(Metalsmith)";
+  if(type == 0x0f) return "(Furnace Operator)";
+  if(type == 0x10) return "(Weaponsmith)";
+  if(type == 0x11) return "(Armorer)";
+  if(type == 0x16) return "(Gem Setter)";
+  if(type == 0x18) return "(Woodcrafter)";
+  if(type == 0x1a) return "(Leatherworker)";
+  if(type == 0x1b) return "(Bone Carver)";
+  if(type == 0x1e) return "(Glassmaker)";
+  if(type == 0x23) return "(Fisherdwarf)";
+  if(type == 0x24) return "(Fish Dissector)";
+  if(type == 0x26) return "(Farmer)";
+  if(type == 0x29) return "(Cook)";
+  if(type == 0x2c) return "(Butcher)";
+  if(type == 0x2f) return "(Planter)";
+  if(type == 0x31) return "(Brewer)";
+  if(type == 0x32) return "(Soap Maker)";
+  if(type == 0x34) return "(Lye Maker)";
+  if(type == 0x37) return "(Mechanic)";
+  if(type == 0x3e) return "(Architect)";
+  if(type == 0x6c) return "(Peasant)";
+  dprintf("Unknown profession! The dwarf with a first name of %s has profession %02x. Please look up whatever profession that is, then email it to zorba@pavlovian.net so he can get all this together without destroying his brain.", getMemoryString(handle, addr + 0x04).c_str(), (int)type);
+  return "(Unknown)";
 }
 
 vector<pair<string, DwarfInfo> > GameLock::get() const {
@@ -249,7 +266,7 @@ bool GameLock::confirm() {
   }
   const DWORD check = 0x007d1b6a;
   if(facu != check)
-    dprintf("is %08x vs %08x\n", check, facu);
+    dprintf("is %08x vs %08x\n", (int)check, (int)facu);
   return facu == check;
 }
 
