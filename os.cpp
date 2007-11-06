@@ -121,6 +121,14 @@ inline bool verifyInlined(const void *const p) {
 bool testInlined() {
   return verifyInlined(__builtin_return_address(1));
 }
+
+bool fileexists(const string &fil) {
+  FILE *jfil = fopen(fil.c_str(), "r");
+  bool rv = jfil;
+  if(jfil)
+    fclose(jfil);
+  return rv;
+}
  
 void dumpStackTrace() {
   vector<const void *> stack;
@@ -132,54 +140,62 @@ void dumpStackTrace() {
     StackTracer<2>::printStack(&stack);
   }
   
-  vector<pair<string, string> > tokens;
-  {
-    string line = "addr2line -f -e " + exename() + " ";
-    for(int i = 0; i < stack.size(); i++)
-      line += StringPrintf("%p ", stack[i]);
-    line += "> addr2linetmp.txt";
-    int rv = system(line.c_str());
-    if(!rv) {
-      {
-        ifstream ifs("addr2linetmp.txt");
-        string lin;
-        while(getline(ifs, lin)) {
-          string tlin;
-          getline(ifs, tlin);
-          tokens.push_back(make_pair(lin, tlin));
+  if(fileexists("useaddr2line")) {
+    vector<pair<string, string> > tokens;
+    {
+      string line = "addr2line -f -e " + exename() + " ";
+      for(int i = 0; i < stack.size(); i++)
+        line += StringPrintf("%p ", stack[i]);
+      line += "> addr2linetmp.txt";
+      int rv = system(line.c_str());
+      if(!rv) {
+        {
+          ifstream ifs("addr2linetmp.txt");
+          string lin;
+          while(getline(ifs, lin)) {
+            string tlin;
+            getline(ifs, tlin);
+            tokens.push_back(make_pair(lin, tlin));
+          }
         }
+        unlink("addr2linetmp.txt");
+      } else {
+        dprintf("Couldn't call addr2line\n");
+        return;
       }
-      unlink("addr2linetmp.txt");
-    } else {
-      dprintf("Couldn't call addr2line\n");
-      return;
     }
+    
+    {
+      string line = "c++filt -n -s gnu-v3 ";
+      for(int i = 0; i < tokens.size(); i++)
+        line += tokens[i].first + " ";
+      line += "> cppfilttmp.txt";
+      int rv = system(line.c_str());
+      if(!rv) {
+        {
+          ifstream ifs("cppfilttmp.txt");
+          string lin;
+          int ct = 0;
+          while(getline(ifs, lin)) {
+            if(lin.size() && lin[0] == '_')
+              lin.erase(lin.begin());
+            dprintf("  %s - %s", tokens[ct].second.c_str(), lin.c_str());
+            ct++;
+          }
+        }
+        unlink("cppfilttmp.txt");
+      } else {
+        dprintf("Couldn't call c++filt\n");
+        return;
+      }
+    }
+  } else {
+    dprintf("Raw stack dump\n");
+    for(int i = 0; i < stack.size(); i++)
+      dprintf("%08x\n", stack[i]);
+    dprintf("Raw stack dump done\n");
   }
   
-  {
-    string line = "c++filt -n -s gnu-v3 ";
-    for(int i = 0; i < tokens.size(); i++)
-      line += tokens[i].first + " ";
-    line += "> cppfilttmp.txt";
-    int rv = system(line.c_str());
-    if(!rv) {
-      {
-        ifstream ifs("cppfilttmp.txt");
-        string lin;
-        int ct = 0;
-        while(getline(ifs, lin)) {
-          if(lin.size() && lin[0] == '_')
-            lin.erase(lin.begin());
-          dprintf("  %s - %s", tokens[ct].second.c_str(), lin.c_str());
-          ct++;
-        }
-      }
-      unlink("cppfilttmp.txt");
-    } else {
-      dprintf("Couldn't call c++filt\n");
-      return;
-    }
-  }
   dprintf("\n");
 }
 

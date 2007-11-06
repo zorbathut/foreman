@@ -35,7 +35,7 @@ I can be contacted at zorba-foreman@pavlovian.net
 
 using namespace std;
 
-const string foremanname =  "Dwarf Foreman 0.3.4b (v0.27.169.33a compatible)";
+const string foremanname =  "Dwarf Foreman 0.3.5b (v0.27.169.33a compatible)";
 
 /*************
  * ForemanGrid
