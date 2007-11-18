@@ -86,7 +86,11 @@ string getMemoryString(HANDLE handle, DWORD address) {
     addr = getMemoryDW(handle, address);
   }
   DWORD len = getMemoryDW(handle, address + 16);
+  if(len > cap)
+    dprintf("Len is %d, cap is %d, I don't know what the fuck is going on here and so I'm going to crash\n", (int)len, (int)cap);
   CHECK(len <= cap);
+  CHECK(len >= 0);
+  CHECK(len < (1 << 20));   // no
   vector<char> dat(len);
   getMemory(handle, addr, &*dat.begin(), len);
   return string(dat.begin(), dat.end());
@@ -94,7 +98,15 @@ string getMemoryString(HANDLE handle, DWORD address) {
 
 //vector<int> bitses(20 * 8);
 
+const DWORD dwarfid = 0x01238AD0;
+int realdwarfid = -1;
+
 bool isLivingDwarf(HANDLE handle, DWORD address) {
+  
+  if(realdwarfid == -1) {
+    realdwarfid = getMemoryDW(handle, dwarfid);
+    dprintf("Dwarf ID is %02x\n", realdwarfid);
+  }
 
   /*dprintf("%s the '%s': %08x, %08x\n", getMemoryString(handle, address + 4).c_str(), getMemoryString(handle, address + 0x70).c_str(), (int)getMemoryDW(handle, address + 0xa0), (int)getMemoryDW(handle, address + 0xa4));
   
@@ -113,9 +125,9 @@ bool isLivingDwarf(HANDLE handle, DWORD address) {
   
   string prof = getMemoryString(handle, address + 0x70);
   
-  CHECK(!prof.size() || getMemorySW(handle, address + 0x8c) == 0xa6); // if a creature has a profession, something weird has happened
+  CHECK(!prof.size() || getMemorySW(handle, address + 0x8c) == realdwarfid); // if a creature has a profession, something weird has happened
   
-  if(getMemorySW(handle, address + 0x8c) != 0xa6)
+  if(getMemorySW(handle, address + 0x8c) != realdwarfid)
     return false;
   
   //dprintf("%s the '%s': %08x\n", getMemoryString(handle, address + 4).c_str(), getMemoryString(handle, address + 0x70).c_str(), (int)getMemoryDW(handle, address + 0xa0));
@@ -123,7 +135,7 @@ bool isLivingDwarf(HANDLE handle, DWORD address) {
   return true;
 }
 
-const DWORD critter_start = 0x01416A88;
+const DWORD critter_start = 0x01417A38;
 const DWORD prof_start = 0x458;
 
 string getProf(HANDLE handle, DWORD addr) {
@@ -350,7 +362,7 @@ bool GameLock::confirm() {
     facu = facu + acu;
     acu = acu + kod[i];
   }
-  const DWORD check = 0x007d1b6a;
+  const DWORD check = 0x0090e6ac;
   if(facu != check)
     dprintf("is %08x vs %08x\n", (int)check, (int)facu);
   return facu == check;
@@ -416,7 +428,7 @@ GameLock::~GameLock() {
 smart_ptr<GameLock> GameHandle::lockGame() {
   smart_ptr<GameLock> pt = smart_ptr<GameLock>(new GameLock(handle, pid));
   if(!pt->confirm()) {
-    MessageBox(NULL, "I'm not sure this is the right version of Dwarf Fortress. Check the Dwarf Foreman titlebar - you need to have that version, otherwise this won't work!\r\n\r\nAlso, if you have any other windows named \"Dwarf Fortress\", you should close them. Don't ask. I'll fix it later.", "Error", MB_OK | MB_ICONERROR);
+    MessageBox(NULL, "I'm not sure this is the right version of Dwarf Fortress. Check the Dwarf Foreman titlebar - you need to have that version, otherwise this won't work!", "Error", MB_OK | MB_ICONERROR);
     return smart_ptr<GameLock>(NULL);
   }
   return pt;

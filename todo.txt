@@ -1,5 +1,6 @@
-- Fix the axe/mining/carpenting thing
-- add a version check and also a check to make sure it's actually dwarf fortress
+- Set up stacktracing
+- Dump foreman version right after stack trace
+- Print out debug info in the various spots (for example, if profession+notdwarf, do an appropriate dump)
 - detect dwarves a bit better to deal with mods
 - split unnamed based on professions
 - Add legend
