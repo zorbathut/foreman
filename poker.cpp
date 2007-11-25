@@ -22,6 +22,7 @@ I can be contacted at zorba-foreman@pavlovian.net
 #include "poker.h"
 #include "util.h"
 #include "db.h"
+#include "conf.h"
 
 #include <tlhelp32.h>
 #include <psapi.h>
@@ -98,7 +99,6 @@ string getMemoryString(HANDLE handle, DWORD address) {
 
 //vector<int> bitses(20 * 8);
 
-const DWORD dwarfid = 0x01238AD0;
 int realdwarfid = -1;
 
 bool isLivingDwarf(HANDLE handle, DWORD address) {
@@ -134,9 +134,6 @@ bool isLivingDwarf(HANDLE handle, DWORD address) {
   
   return true;
 }
-
-const DWORD critter_start = 0x01417A38;
-const DWORD prof_start = 0x458;
 
 string getProf(HANDLE handle, DWORD addr) {
   string lt = getMemoryString(handle, addr + 0x70);
@@ -362,7 +359,6 @@ bool GameLock::confirm() {
     facu = facu + acu;
     acu = acu + kod[i];
   }
-  const DWORD check = 0x0090e6ac;
   if(facu != check)
     dprintf("is %08x vs %08x\n", (int)check, (int)facu);
   return facu == check;
@@ -428,7 +424,7 @@ GameLock::~GameLock() {
 smart_ptr<GameLock> GameHandle::lockGame() {
   smart_ptr<GameLock> pt = smart_ptr<GameLock>(new GameLock(handle, pid));
   if(!pt->confirm()) {
-    MessageBox(NULL, "I'm not sure this is the right version of Dwarf Fortress. Check the Dwarf Foreman titlebar - you need to have that version, otherwise this won't work!", "Error", MB_OK | MB_ICONERROR);
+    MessageBox(NULL, ("I'm not sure this is the right version of Dwarf Fortress. This version requires Dwarf Fortress " + versionname).c_str(), "Error", MB_OK | MB_ICONERROR);
     return smart_ptr<GameLock>(NULL);
   }
   return pt;

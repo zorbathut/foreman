@@ -30,12 +30,11 @@ I can be contacted at zorba-foreman@pavlovian.net
 #include "util.h"
 #include "db.h"
 #include "functor.h"
+#include "conf.h"
 
 #include <boost/noncopyable.hpp>
 
 using namespace std;
-
-const string foremanname =  "Dwarf Foreman 0.3.6b (v0.27.169.33b compatible)";
 
 /*************
  * ForemanGrid
@@ -339,7 +338,7 @@ smart_ptr<GameHandle> ForemanWindow::stdConnect() {
   return hand;
 }
 
-ForemanWindow::ForemanWindow() : wxFrame((wxFrame *)NULL, -1, foremanname, wxDefaultPosition, wxSize(1000, 600)) {
+ForemanWindow::ForemanWindow() : wxFrame((wxFrame *)NULL, -1, foremanname + " (" + versionname + " compatible)", wxDefaultPosition, wxSize(1000, 600)) {
   wxMenuBar *menuBar = new wxMenuBar;
   
   {
