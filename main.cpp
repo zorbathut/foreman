@@ -338,7 +338,7 @@ smart_ptr<GameHandle> ForemanWindow::stdConnect() {
   return hand;
 }
 
-ForemanWindow::ForemanWindow() : wxFrame((wxFrame *)NULL, -1, foremanname + " (" + versionname + " compatible)", wxDefaultPosition, wxSize(1000, 600)) {
+ForemanWindow::ForemanWindow() : wxFrame((wxFrame *)NULL, -1, foremanname, wxDefaultPosition, wxSize(1000, 600)) {
   wxMenuBar *menuBar = new wxMenuBar;
   
   {
@@ -415,6 +415,7 @@ IMPLEMENT_APP(ForemanMain)
 
 bool ForemanMain::OnInit() {
   set_exename("foreman.exe");
+  loadConfig();
   
   wxFrame *frame = new ForemanWindow();
   frame->Show(true);

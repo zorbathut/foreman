@@ -104,7 +104,7 @@ int realdwarfid = -1;
 bool isLivingDwarf(HANDLE handle, DWORD address) {
   
   if(realdwarfid == -1) {
-    realdwarfid = getMemoryDW(handle, dwarfid);
+    realdwarfid = getMemoryDW(handle, dwarfidpos);
     dprintf("Dwarf ID is %02x\n", realdwarfid);
   }
 
@@ -287,7 +287,7 @@ vector<pair<string, DwarfInfo> > GameLock::get() const {
       if(labor_text[i].descr[0] == '(') {
         info.jobs[i] = C_MU;
       } else {
-        char kar = getMemoryChar(handle, addr + prof_start + i);
+        char kar = getMemoryChar(handle, addr + profession_start + i);
         CHECK(!!kar == kar);
         info.jobs[i] = (Change)kar;
       }
@@ -335,8 +335,8 @@ void GameLock::set(const vector<pair<string, DwarfInfo> > &sinf) {
     for(int i = 0; i < ARRAY_SIZE(sinf[cn].second.jobs); i++) {
       if(sinf[cn].second.jobs[i] == C_MU)
         continue;
-      setMemoryChar(handle, addr + prof_start + i, sinf[cn].second.jobs[i]);
-      CHECK(getMemoryChar(handle, addr + prof_start + i) == sinf[cn].second.jobs[i]);
+      setMemoryChar(handle, addr + profession_start + i, sinf[cn].second.jobs[i]);
+      CHECK(getMemoryChar(handle, addr + profession_start + i) == sinf[cn].second.jobs[i]);
     }
     
     cn++;
@@ -346,6 +346,13 @@ void GameLock::set(const vector<pair<string, DwarfInfo> > &sinf) {
 };
 
 bool GameLock::confirm() {
+  DWORD facu = newcheck();
+  if(facu != check)
+    dprintf("is %08x vs %08x\n", (int)check, (int)facu);
+  return facu == check;
+}
+
+DWORD GameLock::newcheck() {
   const DWORD beg = 0x00400000;
   const DWORD end = 0x00401000;
   vector<char> kod(end - beg);
@@ -359,9 +366,7 @@ bool GameLock::confirm() {
     facu = facu + acu;
     acu = acu + kod[i];
   }
-  if(facu != check)
-    dprintf("is %08x vs %08x\n", (int)check, (int)facu);
-  return facu == check;
+  return facu;
 }
 
 void SuspendProcess(DWORD pid, bool suspend) { 
@@ -424,7 +429,7 @@ GameLock::~GameLock() {
 smart_ptr<GameLock> GameHandle::lockGame() {
   smart_ptr<GameLock> pt = smart_ptr<GameLock>(new GameLock(handle, pid));
   if(!pt->confirm()) {
-    MessageBox(NULL, ("I'm not sure this is the right version of Dwarf Fortress. This version requires Dwarf Fortress " + versionname).c_str(), "Error", MB_OK | MB_ICONERROR);
+    MessageBox(NULL, StringPrintf("I'm not sure this is the right version of Dwarf Fortress. You may need to update the \"config\" file located in this directory with new values. Just for reference, the check value is %08x", pt->newcheck()).c_str(), "Error", MB_OK | MB_ICONERROR);
     return smart_ptr<GameLock>(NULL);
   }
   return pt;

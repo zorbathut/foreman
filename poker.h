@@ -48,6 +48,7 @@ class GameLock {
 public:
   
   bool confirm();
+  DWORD newcheck();
   
   vector<pair<string, DwarfInfo> > get() const;
   

@@ -2,7 +2,7 @@
 STDCXXFLAGS := @STDCXXFLAGS@ -DDPRINTF_MARKUP -D_WIN32_WINNT=0x0500 -Wall -Wno-sign-compare -Wno-uninitialized -g
 STDLDFLAGS := @STDLDFLAGS@ -g
 
-FOREMANSOURCES := main debug parse util os poker db
+FOREMANSOURCES := main debug parse util os poker db conf
 FOREMANCXXFLAGS := `@WX@ --cxxflags` $(STDCXXFLAGS)
 FOREMANLDFLAGS := `@WX@ --libs --gl-libs` $(STDLDFLAGS) -lpsapi
 
@@ -37,6 +37,7 @@ package: foreman
 	rm -rf foreman.zip
 	mkdir deploy
 	cp foreman.exe deploy
+	cp config deploy
 	cp /usr/mingw/local/lib/wxbase28_gcc_custom.dll deploy
 	cp /usr/mingw/local/lib/wxmsw28_core_gcc_custom.dll deploy
 	cp /usr/bin/mingwm10.dll deploy
